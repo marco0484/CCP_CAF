@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CCP</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+rel="stylesheet"
+/>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<section id="loginScreen" class="screen">
+
+    <div class="login-card">
+
+        <div class="logo">
+            <i class="fa-solid fa-mug-hot"></i>
+        </div>
+
+        <h1>Iniciar Sesion</h1>
+
+        <input
+            type="email"
+            placeholder="Correo"
+            id="email"
+        >
+
+        <input
+            type="password"
+            placeholder="Contraseña"
+            id="password"
+        >
+
+        <button onclick="login()">
+            Ingresar
+        </button>
+
+    </div>
+
+</section>
+
+<!-- APP -->
+
+<section id="appScreen" class="hidden">
+
+    <header>
+
+        <div>
+            <h2>Control de Cobranza ☕</h2>
+            <span>Gestión de adeudos</span>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+
+    </header>
+
+    <!-- RESUMEN -->
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <span>Total Adeudo</span>
+            <h2>$12,450</h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Clientes</span>
+            <h2>42</h2>
+        </div>
+
+        <div class="stat-card">
+            <span>Pendientes</span>
+            <h2>17</h2>
+        </div>
+
+    </div>
+
+    <!-- BUSCADOR -->
+
+    <div class="search-box">
+
+        <input
+            type="text"
+            placeholder="Buscar cliente..."
+            id="searchClient"
+        >
+
+    </div>
+
+    <!-- ACCIONES -->
+
+    <div class="quick-actions">
+
+        <button>
+            <i class="fa-solid fa-user-plus"></i>
+            Cliente
+        </button>
+
+        <button>
+            <i class="fa-solid fa-mug-hot"></i>
+            Consumo
+        </button>
+
+        <button>
+            <i class="fa-solid fa-money-bill"></i>
+            Pago
+        </button>
+
+        <button>
+            <i class="fa-solid fa-image"></i>
+            Corte
+        </button>
+
+    </div>
+
+    <!-- CLIENTES -->
+
+    <div class="section">
+
+        <div class="section-title">
+
+            <h3>Adeudos Activos</h3>
+
+        </div>
+
+        <div id="clientsList">
+
+        </div>
+
+    </div>
+
+</section>
+
+<script src="app.js"></script>
+
+</body>
+</html>
