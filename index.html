@@ -67,21 +67,23 @@ rel="stylesheet"
 
     <!-- RESUMEN -->
 
-    <div class="stats-grid">
+<div class="stats-grid">
 
-<div class="stat-card">
-    <span>Total Adeudo</span>
-    <h2 id="totalAdeudo">$0</h2>
-</div>
+    <div class="stat-card">
+        <span>Total Adeudo</span>
+        <h2 id="totalAdeudo">$0</h2>
+    </div>
 
-<div class="stat-card">
-    <span>Clientes</span>
-    <h2 id="totalClientes">0</h2>
-</div>
+    <div class="stat-card">
+        <span>Clientes</span>
+        <h2 id="totalClientes">0</h2>
+    </div>
 
-<div class="stat-card">
-    <span>Pendientes</span>
-    <h2 id="clientesPendientes">0</h2>
+    <div class="stat-card">
+        <span>Pendientes</span>
+        <h2 id="clientesPendientes">0</h2>
+    </div>
+
 </div>
 
     <!-- BUSCADOR -->
@@ -98,29 +100,29 @@ rel="stylesheet"
 
     <!-- ACCIONES -->
 
-    <div class="quick-actions">
+<div class="quick-actions">
 
-        <button>
-            <i class="fa-solid fa-user-plus"></i>
-            Cliente
-        </button>
+    <button onclick="nuevoCliente()">
+        <i class="fa-solid fa-user-plus"></i>
+        Cliente
+    </button>
 
-        <button>
-            <i class="fa-solid fa-mug-hot"></i>
-            Consumo
-        </button>
+    <button onclick="nuevoConsumo()">
+        <i class="fa-solid fa-mug-hot"></i>
+        Consumo
+    </button>
 
-        <button>
-            <i class="fa-solid fa-money-bill"></i>
-            Pago
-        </button>
+    <button onclick="nuevoPago()">
+        <i class="fa-solid fa-money-bill"></i>
+        Pago
+    </button>
 
-        <button>
-            <i class="fa-solid fa-image"></i>
-            Corte
-        </button>
+    <button onclick="generarCorte()">
+        <i class="fa-solid fa-image"></i>
+        Corte
+    </button>
 
-    </div>
+</div>
 
     <!-- CLIENTES -->
 
@@ -139,6 +141,26 @@ rel="stylesheet"
     </div>
 
 </section>
+
+<div id="modal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3 id="modalTitle"></h3>
+
+            <button onclick="cerrarModal()">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="modalBody"></div>
+
+    </div>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>

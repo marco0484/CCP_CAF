@@ -258,3 +258,54 @@ document.addEventListener("input", e => {
                 : "none";
         });
 });
+
+function abrirModal() {
+
+    document
+        .getElementById("modal")
+        .classList.remove("hidden");
+}
+
+function cerrarModal() {
+
+    document
+        .getElementById("modal")
+        .classList.add("hidden");
+}
+
+function nuevoCliente() {
+
+    document.getElementById("modalTitle")
+        .innerHTML = "Nuevo Cliente";
+
+    document.getElementById("modalBody")
+        .innerHTML = `
+            <input
+                id="clienteNombre"
+                placeholder="Nombre"
+            >
+
+            <input
+                id="clienteTelefono"
+                placeholder="Teléfono"
+            >
+
+            <button>
+                Guardar
+            </button>
+        `;
+
+    abrirModal();
+}
+
+function nuevoConsumo() {
+    alert("Próximamente");
+}
+
+function nuevoPago() {
+    alert("Próximamente");
+}
+
+function generarCorte() {
+    alert("Próximamente");
+}
