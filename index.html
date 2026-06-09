@@ -69,22 +69,20 @@ rel="stylesheet"
 
     <div class="stats-grid">
 
-        <div class="stat-card">
-            <span>Total Adeudo</span>
-            <h2>$12,450</h2>
-        </div>
+<div class="stat-card">
+    <span>Total Adeudo</span>
+    <h2 id="totalAdeudo">$0</h2>
+</div>
 
-        <div class="stat-card">
-            <span>Clientes</span>
-            <h2>42</h2>
-        </div>
+<div class="stat-card">
+    <span>Clientes</span>
+    <h2 id="totalClientes">0</h2>
+</div>
 
-        <div class="stat-card">
-            <span>Pendientes</span>
-            <h2>17</h2>
-        </div>
-
-    </div>
+<div class="stat-card">
+    <span>Pendientes</span>
+    <h2 id="clientesPendientes">0</h2>
+</div>
 
     <!-- BUSCADOR -->
 
@@ -142,6 +140,7 @@ rel="stylesheet"
 
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
 
 </body>
