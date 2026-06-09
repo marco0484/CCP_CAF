@@ -1,26 +1,29 @@
-const clientes = [
-    {
-        id: 1,
-        nombre: "Marco",
-        telefono: "5512345678",
-        saldo: 850,
-        ultimoMovimiento: "Hoy 08:20"
-    },
-    {
-        id: 2,
-        nombre: "Luis",
-        telefono: "5587654321",
-        saldo: 450,
-        ultimoMovimiento: "Ayer 14:10"
-    },
-    {
-        id: 3,
-        nombre: "Ana",
-        telefono: "5511122233",
-        saldo: 90,
-        ultimoMovimiento: "Lunes 11:00"
-    }
-];
+
+/* ========================= */
+/* SUPABASE */
+/* ========================= */
+
+const SUPABASE_URL =
+  "https://caoqqzzwwpiivmqqeigw.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_4FaRj7XuzifYgPa8BjtO8A_C46t5q0Q";
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+/* ========================= */
+/* VARIABLES */
+/* ========================= */
+
+let clientes = [];
+
+/* ========================= */
+/* LOGIN */
+/* ========================= */
 
 function login() {
 
@@ -39,7 +42,46 @@ function logout() {
     location.reload();
 }
 
-function cargarClientes() {
+/* ========================= */
+/* CLIENTES */
+/* ========================= */
+
+async function cargarClientes() {
+
+    const container =
+        document.getElementById("clientsList");
+
+    if (!container) return;
+
+    container.innerHTML =
+        "<p>Cargando clientes...</p>";
+
+    const { data, error } =
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select("*")
+            .order("saldo", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+            "<p>Error al cargar clientes</p>";
+
+        return;
+    }
+
+    clientes = data || [];
+
+    console.log("Clientes:", clientes);
+
+    renderClientes();
+}
+
+function renderClientes() {
 
     const container =
         document.getElementById("clientsList");
@@ -48,18 +90,32 @@ function cargarClientes() {
 
     container.innerHTML = "";
 
+    if (clientes.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                No hay clientes registrados
+            </div>
+        `;
+
+        actualizarResumen();
+
+        return;
+    }
+
     clientes.forEach(cliente => {
 
         let color = "green";
 
-        if (cliente.saldo > 500) {
+        if (Number(cliente.saldo) > 500) {
             color = "red";
-        } else if (cliente.saldo > 100) {
+        }
+        else if (Number(cliente.saldo) > 100) {
             color = "orange";
         }
 
         container.innerHTML += `
-        
+
         <div class="client-card">
 
             <div class="client-left">
@@ -69,7 +125,7 @@ function cargarClientes() {
                 </div>
 
                 <div class="client-last">
-                    ${cliente.ultimoMovimiento}
+                    ${cliente.departamento || "Sin departamento"}
                 </div>
 
             </div>
@@ -77,15 +133,23 @@ function cargarClientes() {
             <div class="client-right">
 
                 <div class="client-balance ${color}">
-                    $${cliente.saldo}
+                    $${Number(cliente.saldo).toFixed(2)}
                 </div>
 
-                <button
-                    class="notify-btn"
-                    onclick="notificar(${cliente.id})"
-                >
-                    <i class="fa-brands fa-whatsapp"></i>
-                </button>
+                ${
+                    cliente.telefono
+                    ?
+                    `
+                    <button
+                        class="notify-btn"
+                        onclick="notificar(${cliente.id})"
+                    >
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </button>
+                    `
+                    :
+                    ""
+                }
 
             </div>
 
@@ -97,15 +161,23 @@ function cargarClientes() {
     actualizarResumen();
 }
 
+/* ========================= */
+/* DASHBOARD */
+/* ========================= */
+
 function actualizarResumen() {
 
-    const totalAdeudo = clientes.reduce(
-        (total, cliente) => total + cliente.saldo,
-        0
-    );
+    const totalAdeudo =
+        clientes.reduce(
+            (total, cliente) =>
+                total + Number(cliente.saldo),
+            0
+        );
 
     const clientesPendientes =
-        clientes.filter(c => c.saldo > 0).length;
+        clientes.filter(
+            c => Number(c.saldo) > 0
+        ).length;
 
     const totalElement =
         document.getElementById("totalAdeudo");
@@ -113,21 +185,35 @@ function actualizarResumen() {
     const pendientesElement =
         document.getElementById("clientesPendientes");
 
+    const clientesElement =
+        document.getElementById("totalClientes");
+
     if (totalElement) {
         totalElement.textContent =
-            `$${totalAdeudo.toLocaleString()}`;
+            `$${totalAdeudo.toFixed(2)}`;
     }
 
     if (pendientesElement) {
         pendientesElement.textContent =
             clientesPendientes;
     }
+
+    if (clientesElement) {
+        clientesElement.textContent =
+            clientes.length;
+    }
 }
+
+/* ========================= */
+/* WHATSAPP */
+/* ========================= */
 
 function notificar(id) {
 
     const cliente =
-        clientes.find(c => c.id === id);
+        clientes.find(
+            c => c.id === id
+        );
 
     if (!cliente) return;
 
@@ -135,9 +221,7 @@ function notificar(id) {
 
 Te compartimos tu saldo actual de cafetería.
 
-Adeudo pendiente: $${cliente.saldo}
-
-Por favor acércate con el encargado para cualquier aclaración.
+Adeudo pendiente: $${Number(cliente.saldo).toFixed(2)}
 
 Gracias ☕`;
 
@@ -146,6 +230,10 @@ Gracias ☕`;
         "_blank"
     );
 }
+
+/* ========================= */
+/* BUSCADOR */
+/* ========================= */
 
 document.addEventListener("input", e => {
 
@@ -169,5 +257,4 @@ document.addEventListener("input", e => {
                 ? "flex"
                 : "none";
         });
-
 });
