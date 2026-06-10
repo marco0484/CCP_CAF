@@ -273,6 +273,49 @@ function cerrarModal() {
         .classList.add("hidden");
 }
 
+async function guardarCliente() {
+
+    const nombre =
+        document.getElementById("clienteNombre").value;
+
+    const telefono =
+        document.getElementById("clienteTelefono").value;
+
+    const departamento =
+        document.getElementById("clienteDepartamento").value;
+
+    if(!nombre){
+
+        alert("Ingresa el nombre");
+
+        return;
+    }
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .insert({
+                nombre,
+                telefono,
+                departamento
+            });
+
+    if(error){
+
+        console.error(error);
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert("Cliente registrado");
+
+    cerrarModal();
+
+    cargarClientes();
+}
+
 function nuevoCliente() {
 
     document.getElementById("modalTitle")
@@ -280,6 +323,9 @@ function nuevoCliente() {
 
     document.getElementById("modalBody")
         .innerHTML = `
+
+        <div class="modal-body">
+
             <input
                 id="clienteNombre"
                 placeholder="Nombre"
@@ -290,13 +336,26 @@ function nuevoCliente() {
                 placeholder="Teléfono"
             >
 
-            <button>
-                Guardar
+            <input
+                id="clienteDepartamento"
+                placeholder="Departamento"
+            >
+
+            <button
+                class="save-btn"
+                onclick="guardarCliente()"
+            >
+                Guardar Cliente
             </button>
-        `;
+
+        </div>
+
+    `;
 
     abrirModal();
 }
+
+
 
 function nuevoConsumo() {
     alert("Próximamente");
