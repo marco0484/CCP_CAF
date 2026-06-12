@@ -21,11 +21,64 @@ const supabaseClient =
 
 let clientes = [];
 
+const usuarioGuardado =
+    localStorage.getItem("usuario");
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        if(usuarioGuardado){
+
+            document
+                .getElementById("loginScreen")
+                .classList.add("hidden");
+
+            document
+                .getElementById("appScreen")
+                .classList.remove("hidden");
+
+            cargarClientes();
+        }
+    }
+);
+
 /* ========================= */
 /* LOGIN */
 /* ========================= */
 
-function login() {
+async function login() {
+
+    const usuario =
+        document.getElementById("email")
+        .value
+        .trim();
+
+    const password =
+        document.getElementById("password")
+        .value
+        .trim();
+
+    const { data, error } =
+        await supabaseClient
+            .from("ccp_usuarios")
+            .select("*")
+            .eq("usuario", usuario)
+            .eq("password", password)
+            .eq("activo", true)
+            .single();
+
+    if(error || !data){
+
+        alert("Usuario o contraseña incorrectos");
+
+        return;
+    }
+
+    localStorage.setItem(
+        "usuario",
+        JSON.stringify(data)
+    );
 
     document
         .getElementById("loginScreen")
@@ -39,6 +92,9 @@ function login() {
 }
 
 function logout() {
+
+    localStorage.removeItem("usuario");
+
     location.reload();
 }
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>CCP</title>
+<title>CCP Coffe</title>
 
 <link rel="stylesheet" href="styles.css">
 
@@ -55,8 +55,8 @@ rel="stylesheet"
     <header>
 
         <div>
-            <h2>Control de Cobranza ☕</h2>
-            <span>Gestión de adeudos</span>
+            <h2>Cafeteria piso 23 ☕</h2>
+            <span>Control de consumos</span>
         </div>
 
         <button class="logout-btn" onclick="logout()">
@@ -70,7 +70,7 @@ rel="stylesheet"
 <div class="stats-grid">
 
     <div class="stat-card">
-        <span>Total Adeudo</span>
+        <span>Monto pendiente</span>
         <h2 id="totalAdeudo">$0</h2>
     </div>
 
@@ -80,7 +80,7 @@ rel="stylesheet"
     </div>
 
     <div class="stat-card">
-        <span>Pendientes</span>
+        <span>Clientes con consumo pendiente</span>
         <h2 id="clientesPendientes">0</h2>
     </div>
 
@@ -109,7 +109,7 @@ rel="stylesheet"
 
     <button onclick="nuevoConsumo()">
         <i class="fa-solid fa-mug-hot"></i>
-        Consumo
+        Agregar consumo
     </button>
 
     <button onclick="nuevoPago()">
