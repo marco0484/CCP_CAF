@@ -385,23 +385,17 @@ header{
 }
 
 .modal-content{
-
     width:90%;
     max-width:500px;
-
     background:white;
-
     border-radius:20px;
-
     padding:20px;
 }
 
 .modal-header{
-
     display:flex;
     justify-content:space-between;
     align-items:center;
-
     margin-bottom:20px;
 }
 
@@ -413,17 +407,11 @@ header{
 }
 
 .save-btn{
-
     padding:14px;
-
     border:none;
-
     border-radius:14px;
-
     background:var(--primary);
-
     color:white;
-
     font-weight:600;
 }
 
@@ -436,6 +424,19 @@ select{
     border-radius:14px;
     background:#f0f0f0;
 }
+
+.historial-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.historial-item{
+    background:#f5f5f5;
+    padding:12px;
+    border-radius:12px;
+}
+
 
 /* TABLET */
 

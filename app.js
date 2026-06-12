@@ -132,26 +132,37 @@ function renderClientes() {
 
             <div class="client-right">
 
-                <div class="client-balance ${color}">
-                    $${Number(cliente.saldo).toFixed(2)}
-                </div>
+    <div class="client-balance ${color}">
+        $${Number(cliente.saldo).toFixed(2)}
+    </div>
 
-                ${
-                    cliente.telefono
-                    ?
-                    `
-                    <button
-                        class="notify-btn"
-                        onclick="notificar(${cliente.id})"
-                    >
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </button>
-                    `
-                    :
-                    ""
-                }
+    <div style="display:flex; gap:8px;">
 
-            </div>
+        <button
+            class="notify-btn"
+            onclick="verHistorial(${cliente.id})"
+        >
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </button>
+
+        ${
+            cliente.telefono
+            ?
+            `
+            <button
+                class="notify-btn"
+                onclick="notificar(${cliente.id})"
+            >
+                <i class="fa-brands fa-whatsapp"></i>
+            </button>
+            `
+            :
+            ""
+        }
+
+    </div>
+
+</div>
 
         </div>
 
@@ -568,6 +579,85 @@ function generarCorte() {
             </h3>
 
         </div>
+    `;
+
+    abrirModal();
+}
+
+/* VER HISTORIAL */
+
+async function verHistorial(clienteId) {
+
+    const cliente =
+        clientes.find(
+            c => c.id == clienteId
+        );
+
+    const { data, error } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .select("*")
+            .eq("cliente_id", clienteId)
+            .order("fecha", {
+                ascending: false
+            });
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+
+    document.getElementById("modalTitle")
+        .innerHTML =
+        `Historial - ${cliente.nombre}`;
+
+    if(!data.length){
+
+        document.getElementById("modalBody")
+            .innerHTML =
+            "<p>Sin movimientos registrados</p>";
+
+        abrirModal();
+
+        return;
+    }
+
+    document.getElementById("modalBody")
+        .innerHTML = `
+
+        <div class="historial-list">
+
+            ${data.map(m => `
+
+                <div class="historial-item">
+
+                    <div>
+                        <strong>
+                            ${m.tipo}
+                        </strong>
+                    </div>
+
+                    <div>
+                        ${m.concepto || ""}
+                    </div>
+
+                    <div>
+                        $${Number(m.monto).toFixed(2)}
+                    </div>
+
+                    <div style="font-size:.8rem;color:#888;">
+                        ${new Date(m.fecha)
+                            .toLocaleString()}
+                    </div>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
     `;
 
     abrirModal();
