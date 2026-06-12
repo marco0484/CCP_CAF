@@ -357,14 +357,218 @@ function nuevoCliente() {
 
 
 
-function nuevoConsumo() {
-    alert("Próximamente");
+async function nuevoConsumo() {
+
+    const { data: productos } =
+        await supabaseClient
+            .from("ccp_productos")
+            .select("*")
+            .eq("activo", true);
+
+    document.getElementById("modalTitle")
+        .innerHTML = "Registrar Consumo";
+
+    document.getElementById("modalBody")
+        .innerHTML = `
+
+        <div class="modal-body">
+
+            <select id="consumoCliente">
+                ${clientes.map(c => `
+                    <option value="${c.id}">
+                        ${c.nombre}
+                    </option>
+                `).join("")}
+            </select>
+
+            <select id="consumoProducto">
+                ${productos.map(p => `
+                    <option
+                        value="${p.id}"
+                        data-precio="${p.precio}"
+                        data-nombre="${p.nombre}"
+                    >
+                        ${p.nombre} - $${p.precio}
+                    </option>
+                `).join("")}
+            </select>
+
+            <button
+                class="save-btn"
+                onclick="guardarConsumo()"
+            >
+                Guardar Consumo
+            </button>
+
+        </div>
+    `;
+
+    abrirModal();
+}
+
+async function guardarConsumo() {
+
+    const clienteId =
+        document.getElementById("consumoCliente").value;
+
+    const producto =
+        document.getElementById("consumoProducto");
+
+    const option =
+        producto.options[producto.selectedIndex];
+
+    const productoId =
+        option.value;
+
+    const nombre =
+        option.dataset.nombre;
+
+    const precio =
+        Number(option.dataset.precio);
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .insert({
+                cliente_id: clienteId,
+                producto_id: productoId,
+                tipo: "CONSUMO",
+                concepto: nombre,
+                monto: precio,
+                fecha: new Date().toISOString()
+            });
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert("Consumo registrado");
+
+    cerrarModal();
+
+    cargarClientes();
 }
 
 function nuevoPago() {
-    alert("Próximamente");
+
+    document.getElementById("modalTitle")
+        .innerHTML = "Registrar Pago";
+
+    document.getElementById("modalBody")
+        .innerHTML = `
+
+        <div class="modal-body">
+
+            <select id="pagoCliente">
+                ${clientes.map(c => `
+                    <option value="${c.id}">
+                        ${c.nombre}
+                    </option>
+                `).join("")}
+            </select>
+
+            <input
+                id="pagoMonto"
+                type="number"
+                placeholder="Monto"
+            >
+
+            <button
+                class="save-btn"
+                onclick="guardarPago()"
+            >
+                Guardar Pago
+            </button>
+
+        </div>
+    `;
+
+    abrirModal();
+}
+
+async function guardarPago() {
+
+    const clienteId =
+        document.getElementById("pagoCliente").value;
+
+    const monto =
+        Number(
+            document.getElementById("pagoMonto").value
+        );
+
+    if(!monto){
+
+        alert("Ingresa un monto");
+
+        return;
+    }
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .insert({
+                cliente_id: clienteId,
+                tipo: "PAGO",
+                concepto: "Pago",
+                monto: monto,
+                fecha: new Date().toISOString()
+            });
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert("Pago registrado");
+
+    cerrarModal();
+
+    cargarClientes();
 }
 
 function generarCorte() {
-    alert("Próximamente");
+
+    const totalAdeudo =
+        clientes.reduce(
+            (t,c) => t + Number(c.saldo),
+            0
+        );
+
+    const pendientes =
+        clientes.filter(
+            c => Number(c.saldo) > 0
+        ).length;
+
+    document.getElementById("modalTitle")
+        .innerHTML = "Corte del Día";
+
+    document.getElementById("modalBody")
+        .innerHTML = `
+
+        <div class="modal-body">
+
+            <h2>
+                Total Adeudo:
+                $${totalAdeudo.toFixed(2)}
+            </h2>
+
+            <h3>
+                Clientes Pendientes:
+                ${pendientes}
+            </h3>
+
+            <h3>
+                Clientes Registrados:
+                ${clientes.length}
+            </h3>
+
+        </div>
+    `;
+
+    abrirModal();
 }
