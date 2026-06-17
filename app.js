@@ -626,7 +626,7 @@ async function guardarPago() {
                         piso_id: pisoId,
                         tipo: "PAGO",
                         concepto: "Pago en efectivo",
-                        monto: -Math.abs(monto),
+                        monto: Math.abs(monto),
                         fecha: new Date().toISOString()
                     })
 
