@@ -567,13 +567,17 @@ async function nuevoPago() {
                 `).join("")}
             </select>
 
-            <select id="pagoPiso">
-                ${pisos.map(p => `
-                    <option value="${p.id}">
-                        ${p.nombre}
-                    </option>
-                `).join("")}
-            </select>
+<select id="pagoPiso">
+
+    <option value="23">
+        Piso 23
+    </option>
+
+    <option value="26">
+        Piso 26
+    </option>
+
+</select>
 
             <input
                 id="pagoMonto"
@@ -618,13 +622,13 @@ async function guardarPago() {
         await supabaseClient
             .from("ccp_movimientos")
             .insert({
-                cliente_id: clienteId,
-                 piso_id: pisoId,
-                tipo: "PAGO",
-                concepto: "Pago",
-                monto: monto,
-                fecha: new Date().toISOString()
-            });
+                        cliente_id: clienteId,
+                        piso_id: pisoId,
+                        tipo: "PAGO",
+                        concepto: "Pago en efectivo",
+                        monto: -Math.abs(monto),
+                        fecha: new Date().toISOString()
+                    })
 
     if(error){
 
