@@ -448,11 +448,23 @@ async function nuevoConsumo() {
                 `).join("")}
             </select>
 
-            <select
+   <select
     id="consumoProducto"
     multiple
     size="8"
 >
+
+    ${productos.map(p => `
+        <option
+            value="${p.id}"
+            data-precio="${p.precio}"
+            data-nombre="${p.nombre}"
+        >
+            ${p.nombre} - $${p.precio}
+        </option>
+    `).join("")}
+
+</select>
 
             <button
                 class="save-btn"
