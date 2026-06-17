@@ -438,6 +438,20 @@ select{
 }
 
 
+#consumoProducto{
+    min-height: 220px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #ddd;
+    background: #fff;
+    width: 100%;
+}
+
+#consumoProducto option{
+    padding: 10px;
+    margin: 2px 0;
+}
+
 /* TABLET */
 
 @media(min-width:768px){
