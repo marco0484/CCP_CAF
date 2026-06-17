@@ -432,6 +432,12 @@ async function nuevoConsumo() {
             .select("*")
             .eq("activo", true);
 
+    const { data: pisos } =
+        await supabaseClient
+            .from("ccp_pisos")
+            .select("*")
+            .order("id");
+
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Consumo";
 
@@ -448,23 +454,31 @@ async function nuevoConsumo() {
                 `).join("")}
             </select>
 
-   <select
-    id="consumoProducto"
-    multiple
-    size="8"
->
+            <select id="consumoPiso">
+                ${pisos.map(p => `
+                    <option value="${p.id}">
+                        ${p.nombre}
+                    </option>
+                `).join("")}
+            </select>
 
-    ${productos.map(p => `
-        <option
-            value="${p.id}"
-            data-precio="${p.precio}"
-            data-nombre="${p.nombre}"
-        >
-            ${p.nombre} - $${p.precio}
-        </option>
-    `).join("")}
+            <select
+                id="consumoProducto"
+                multiple
+                size="8"
+            >
 
-</select>
+                ${productos.map(p => `
+                    <option
+                        value="${p.id}"
+                        data-precio="${p.precio}"
+                        data-nombre="${p.nombre}"
+                    >
+                        ${p.nombre} - $${p.precio}
+                    </option>
+                `).join("")}
+
+            </select>
 
             <button
                 class="save-btn"
@@ -484,6 +498,9 @@ async function guardarConsumo() {
     const clienteId =
         document.getElementById("consumoCliente").value;
 
+    const pisoId =
+        document.getElementById("consumoPiso").value;
+
     const productosSeleccionados =
         [...document.getElementById("consumoProducto").selectedOptions];
 
@@ -500,6 +517,8 @@ async function guardarConsumo() {
             cliente_id: clienteId,
 
             producto_id: option.value,
+
+            piso_id: pisoId,
 
             tipo: "CONSUMO",
 
@@ -532,7 +551,13 @@ async function guardarConsumo() {
     cargarClientes();
 }
 
-function nuevoPago() {
+async function nuevoPago() {
+
+    const { data: pisos } =
+        await supabaseClient
+            .from("ccp_pisos")
+            .select("*")
+            .order("id");
 
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Pago";
@@ -546,6 +571,14 @@ function nuevoPago() {
                 ${clientes.map(c => `
                     <option value="${c.id}">
                         ${c.nombre}
+                    </option>
+                `).join("")}
+            </select>
+
+            <select id="pagoPiso">
+                ${pisos.map(p => `
+                    <option value="${p.id}">
+                        ${p.nombre}
                     </option>
                 `).join("")}
             </select>
@@ -574,6 +607,9 @@ async function guardarPago() {
     const clienteId =
         document.getElementById("pagoCliente").value;
 
+    const pisoId =
+    document.getElementById("pagoPiso").value;
+
     const monto =
         Number(
             document.getElementById("pagoMonto").value
@@ -591,6 +627,7 @@ async function guardarPago() {
             .from("ccp_movimientos")
             .insert({
                 cliente_id: clienteId,
+                 piso_id: pisoId,
                 tipo: "PAGO",
                 concepto: "Pago",
                 monto: monto,
