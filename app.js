@@ -618,6 +618,25 @@ async function guardarPago() {
         return;
     }
 
+const cliente =
+    clientes.find(c => c.id == clienteId);
+
+if(!cliente){
+
+    alert("Cliente no encontrado");
+
+    return;
+}
+
+if(monto > Number(cliente.saldo)){
+
+    alert(
+        `El adeudo actual es de $${Number(cliente.saldo).toFixed(2)}`
+    );
+
+    return;
+}
+
     const { error } =
         await supabaseClient
             .from("ccp_movimientos")
