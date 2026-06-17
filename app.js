@@ -448,17 +448,11 @@ async function nuevoConsumo() {
                 `).join("")}
             </select>
 
-            <select id="consumoProducto">
-                ${productos.map(p => `
-                    <option
-                        value="${p.id}"
-                        data-precio="${p.precio}"
-                        data-nombre="${p.nombre}"
-                    >
-                        ${p.nombre} - $${p.precio}
-                    </option>
-                `).join("")}
-            </select>
+            <select
+    id="consumoProducto"
+    multiple
+    size="8"
+>
 
             <button
                 class="save-btn"
@@ -478,32 +472,37 @@ async function guardarConsumo() {
     const clienteId =
         document.getElementById("consumoCliente").value;
 
-    const producto =
-        document.getElementById("consumoProducto");
+    const productosSeleccionados =
+        [...document.getElementById("consumoProducto").selectedOptions];
 
-    const option =
-        producto.options[producto.selectedIndex];
+    if(productosSeleccionados.length === 0){
 
-    const productoId =
-        option.value;
+        alert("Selecciona al menos un producto");
 
-    const nombre =
-        option.dataset.nombre;
+        return;
+    }
 
-    const precio =
-        Number(option.dataset.precio);
+    const movimientos =
+        productosSeleccionados.map(option => ({
+
+            cliente_id: clienteId,
+
+            producto_id: option.value,
+
+            tipo: "CONSUMO",
+
+            concepto: option.dataset.nombre,
+
+            monto: Number(option.dataset.precio),
+
+            fecha: new Date().toISOString()
+
+        }));
 
     const { error } =
         await supabaseClient
             .from("ccp_movimientos")
-            .insert({
-                cliente_id: clienteId,
-                producto_id: productoId,
-                tipo: "CONSUMO",
-                concepto: nombre,
-                monto: precio,
-                fecha: new Date().toISOString()
-            });
+            .insert(movimientos);
 
     if(error){
 
@@ -512,7 +511,9 @@ async function guardarConsumo() {
         return;
     }
 
-    alert("Consumo registrado");
+    alert(
+        `${movimientos.length} consumos registrados`
+    );
 
     cerrarModal();
 
