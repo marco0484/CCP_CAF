@@ -600,16 +600,9 @@ async function nuevoPago() {
 
 async function guardarPago() {
 
-    const clienteId =
-        document.getElementById("pagoCliente").value;
-
-    const pisoId =
-    document.getElementById("pagoPiso").value;
-
-    const monto =
-        Number(
-            document.getElementById("pagoMonto").value
-        );
+const clienteId = document.getElementById("pagoCliente").value;
+const pisoId = document.getElementById("pagoPiso").value;
+const monto = Number(document.getElementById("pagoMonto").value);
 
     if(!monto){
 

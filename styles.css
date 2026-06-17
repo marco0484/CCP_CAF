@@ -1,16 +1,13 @@
 :root{
-
-    --primary:#6F4E37;
-    --secondary:#A67C52;
-
-    --bg:#f7f7f7;
-
-    --white:#ffffff;
-
-    --danger:#ff4d4d;
-
-    --shadow:
-    0 10px 30px rgba(0,0,0,.08);
+    --primary:#4A2C1D;
+    --secondary:#8B5E3C;
+    --accent:#D4A373;
+    --success:#2E7D32;
+    --danger:#C62828;
+    --bg:#F6F3EF;
+    --white:#FFFFFF;
+    --card:#FCFAF8;
+    --shadow:0 12px 35px rgba(0,0,0,.08);
 }
 
 *{
@@ -130,16 +127,23 @@ button{
 /* APP */
 
 header{
-
-    background:white;
-
-    padding:20px;
-
+    background:var(--white);
+    padding:24px 30px;
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
+    border-bottom:1px solid rgba(0,0,0,.06);
+}
+
+header h2{
+    font-size:1.6rem;
+    color:var(--primary);
+    font-weight:800;
+}
+
+header span{
+    color:#777;
+    font-size:.9rem;
 }
 
 .logout-btn{
@@ -192,28 +196,19 @@ header{
 }
 
 .quick-actions button{
-
-    background:white;
-
-    border-radius:18px;
-
-    padding:18px;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:10px;
-
-    align-items:center;
-
+    background:var(--white);
+    border-radius:22px;
+    padding:24px;
     box-shadow:var(--shadow);
+    transition:.2s;
+}
+
+.quick-actions button:hover{
+    transform:translateY(-3px);
 }
 
 .quick-actions i{
-
-    font-size:1.4rem;
-
+    font-size:2rem;
     color:var(--primary);
 }
 
@@ -300,16 +295,29 @@ header{
 .stats-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:12px;
-    padding:20px;
+    gap:18px;
+    padding:24px;
 }
 
 .stat-card{
-    background:white;
-    border-radius:20px;
-    padding:18px;
-    text-align:center;
+    background:var(--white);
+    border-radius:24px;
+    padding:24px;
+    text-align:left;
     box-shadow:var(--shadow);
+}
+
+.stat-card span{
+    color:#888;
+    font-size:.85rem;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.stat-card h2{
+    margin-top:12px;
+    font-size:2rem;
+    color:var(--primary);
 }
 
 .stat-card span{
@@ -330,14 +338,16 @@ header{
 }
 
 .client-card{
-    background:white;
-    border-radius:20px;
-    padding:18px;
-    margin-bottom:12px;
+    background:var(--white);
+    border-radius:24px;
+    padding:22px;
+    margin-bottom:16px;
     box-shadow:var(--shadow);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    transition:.2s;
+}
+
+.client-card:hover{
+    transform:translateY(-2px);
 }
 
 .client-left{
@@ -386,10 +396,11 @@ header{
 
 .modal-content{
     width:90%;
-    max-width:500px;
-    background:white;
-    border-radius:20px;
-    padding:20px;
+    max-width:600px;
+    background:var(--white);
+    border-radius:28px;
+    padding:28px;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
 }
 
 .modal-header{
@@ -397,6 +408,16 @@ header{
     justify-content:space-between;
     align-items:center;
     margin-bottom:20px;
+}
+
+input,
+select{
+    width:100%;
+    padding:16px;
+    border:1px solid #ddd;
+    border-radius:16px;
+    background:#fff;
+    font-size:1rem;
 }
 
 .modal-body{
@@ -413,6 +434,20 @@ header{
     background:var(--primary);
     color:white;
     font-weight:600;
+}
+
+.save-btn,
+.login-card button{
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+    color:white;
+    font-weight:700;
+    padding:16px;
+    border-radius:16px;
 }
 
 
