@@ -753,18 +753,28 @@ async function verHistorial(clienteId) {
                         </strong>
                     </div>
 
-                    <div>
-                        ${m.concepto || ""}
-                    </div>
+                   <div>
+    ${m.concepto || ""}
+</div>
 
-                    <div>
-                        $${Number(m.monto).toFixed(2)}
-                    </div>
+<div>
+    📍 ${
+        m.piso_id == 23
+        ? "Piso 23"
+        : m.piso_id == 26
+        ? "Piso 26"
+        : "Sin piso"
+    }
+</div>
 
-                    <div style="font-size:.8rem;color:#888;">
-                        ${new Date(m.fecha)
-                            .toLocaleString()}
-                    </div>
+<div>
+    $${Number(m.monto).toFixed(2)}
+</div>
+
+<div style="font-size:.8rem;color:#888;">
+    ${new Date(m.fecha)
+        .toLocaleString()}
+</div>
 
                 </div>
 

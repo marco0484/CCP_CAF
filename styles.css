@@ -43,6 +43,33 @@ body{
 
 /* LOGIN */
 
+/* LOGIN */
+
+.login-card button,
+.save-btn{
+    width:100%;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    color:#fff;
+    font-weight:700;
+    border-radius:14px;
+    padding:15px;
+}
+
+.privacy-link{
+    text-align:center;
+    margin-top:16px;
+}
+
+.privacy-link a{
+    color:#6b7280;
+    text-decoration:none;
+    font-size:.9rem;
+}
+
+.privacy-link a:hover{
+    color:var(--primary);
+}
+
 .screen{
     min-height:100vh;
     display:flex;
