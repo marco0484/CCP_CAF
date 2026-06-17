@@ -432,12 +432,6 @@ async function nuevoConsumo() {
             .select("*")
             .eq("activo", true);
 
-    const { data: pisos } =
-        await supabaseClient
-            .from("ccp_pisos")
-            .select("*")
-            .order("id");
-
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Consumo";
 
@@ -454,13 +448,17 @@ async function nuevoConsumo() {
                 `).join("")}
             </select>
 
-            <select id="consumoPiso">
-                ${pisos.map(p => `
-                    <option value="${p.id}">
-                        ${p.nombre}
-                    </option>
-                `).join("")}
-            </select>
+           <select id="consumoPiso">
+
+    <option value="23">
+        Piso 23
+    </option>
+
+    <option value="26">
+        Piso 26
+    </option>
+
+</select>
 
             <select
                 id="consumoProducto"
@@ -552,12 +550,6 @@ async function guardarConsumo() {
 }
 
 async function nuevoPago() {
-
-    const { data: pisos } =
-        await supabaseClient
-            .from("ccp_pisos")
-            .select("*")
-            .order("id");
 
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Pago";
