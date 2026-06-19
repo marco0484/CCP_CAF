@@ -201,6 +201,14 @@ function renderClientes() {
             <i class="fa-solid fa-clock-rotate-left"></i>
         </button>
 
+        <button
+    class="notify-btn"
+    onclick="desactivarCliente(${cliente.id})"
+>
+    <i class="fa-solid fa-user-xmark"></i>
+</button>
+
+
         ${
             cliente.telefono
             ?
@@ -776,6 +784,17 @@ async function verHistorial(clienteId) {
         .toLocaleString()}
 </div>
 
+<div style="margin-top:10px;">
+
+    <button
+        class="delete-btn"
+        onclick="cancelarMovimiento(${m.id})"
+    >
+        🗑️ Cancelar
+    </button>
+
+</div>
+
                 </div>
 
             `).join("")}
@@ -785,4 +804,80 @@ async function verHistorial(clienteId) {
     `;
 
     abrirModal();
+}
+
+async function cancelarMovimiento(id){
+
+    const motivo =
+        prompt(
+            "Indica el motivo de cancelación"
+        );
+
+    if(!motivo) return;
+
+    const usuario =
+        JSON.parse(
+            localStorage.getItem("usuario")
+        );
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .update({
+                cancelado: true,
+                motivo_cancelacion: motivo,
+                cancelado_por: usuario.usuario,
+                fecha_cancelacion:
+                    new Date().toISOString()
+            })
+            .eq("id", id);
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert("Movimiento cancelado");
+
+    cerrarModal();
+
+    cargarClientes();
+}
+
+async function desactivarCliente(id){
+
+    const motivo =
+        prompt(
+            "Motivo de baja del cliente"
+        );
+
+    if(!motivo) return;
+
+    const confirmar =
+        confirm(
+            "¿Seguro que deseas dar de baja este cliente?"
+        );
+
+    if(!confirmar) return;
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .update({
+                activo:false
+            })
+            .eq("id",id);
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert("Cliente dado de baja");
+
+    cargarClientes();
 }
