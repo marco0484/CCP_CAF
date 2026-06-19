@@ -756,10 +756,29 @@ async function verHistorial(clienteId) {
                 <div class="historial-item">
 
                     <div>
-                        <strong>
-                            ${m.tipo}
-                        </strong>
-                    </div>
+    <strong>
+        ${m.tipo}
+    </strong>
+
+    ${
+        m.cancelado
+        ?
+        `
+        <span style="
+            background:#dc2626;
+            color:#fff;
+            padding:3px 8px;
+            border-radius:20px;
+            font-size:.75rem;
+            margin-left:8px;
+        ">
+            CANCELADO
+        </span>
+        `
+        :
+        ""
+    }
+</div>
 
                    <div>
     ${m.concepto || ""}
@@ -778,6 +797,29 @@ async function verHistorial(clienteId) {
 <div>
     $${Number(m.monto).toFixed(2)}
 </div>
+${
+    m.cancelado
+    ?
+    `
+    <div style="
+        margin-top:8px;
+        color:#dc2626;
+        font-size:.85rem;
+        font-weight:600;
+    ">
+        Motivo: ${m.motivo_cancelacion || "Sin motivo"}
+    </div>
+
+    <div style="
+        color:#888;
+        font-size:.8rem;
+    ">
+        Cancelado por: ${m.cancelado_por || "N/A"}
+    </div>
+    `
+    :
+    ""
+}
 
 <div style="font-size:.8rem;color:#888;">
     ${new Date(m.fecha)
@@ -786,12 +828,28 @@ async function verHistorial(clienteId) {
 
 <div style="margin-top:10px;">
 
+    ${
+    !m.cancelado
+    ?
+    `
     <button
         class="delete-btn"
         onclick="cancelarMovimiento(${m.id})"
     >
         🗑️ Cancelar
     </button>
+    `
+    :
+    `
+    <div style="
+        color:#dc2626;
+        font-weight:700;
+        margin-top:8px;
+    ">
+        Movimiento cancelado
+    </div>
+    `
+}
 
 </div>
 
