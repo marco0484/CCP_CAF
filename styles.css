@@ -37,11 +37,24 @@ body{
     line-height:1.5;
 }
 
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:url(img/Cuidado-con-el-perro-Simbolo_White.webp);
+background-size:450px;
+background-repeat:no-repeat;
+background-position:center;
+opacity:.025;
+pointer-events:none;
+z-index:-1;
+
+}
+
+
 .hidden{
     display:none!important;
 }
-
-/* LOGIN */
 
 /* LOGIN */
 
@@ -88,24 +101,19 @@ body{
 }
 
 .logo{
-    width:90px;
-    height:90px;
-    margin:auto;
-    border-radius:22px;
-    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    width:220px;
+    height:auto;
+    margin:0 auto 25px;
+    background:none;
+    border-radius:0;
     display:flex;
-    align-items:center;
     justify-content:center;
-    color:#fff;
-    font-size:2rem;
 }
 
-.login-card h1{
-    text-align:center;
-    margin:22px 0 28px;
-    font-size:1.9rem;
+.logo img{
+    width:100%;
+    object-fit:contain;
 }
-
 input,
 select{
     width:100%;
@@ -154,13 +162,16 @@ button{
 }
 
 header{
-    background:var(--card);
-    border-radius:0 0 24px 24px;
-    padding:22px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    box-shadow:var(--shadow);
+
+background:
+linear-gradient(rgba(0,0,0,.75),
+rgba(0,0,0,.75)),
+url(img/Cuidado-con-el-Perro-Horizontal_White.webp);
+
+background-size:420px;
+background-repeat:no-repeat;
+background-position:right center;
+
 }
 
 header h2{
