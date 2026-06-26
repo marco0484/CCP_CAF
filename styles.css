@@ -101,19 +101,18 @@ z-index:-1;
 }
 
 .logo{
-    width:220px;
-    height:auto;
-    margin:0 auto 25px;
-    background:none;
-    border-radius:0;
+    width:260px;
+    margin:0 auto 30px;
     display:flex;
     justify-content:center;
 }
 
 .logo img{
+    display:block;
     width:100%;
-    object-fit:contain;
+    height:auto;
 }
+
 input,
 select{
     width:100%;
@@ -162,25 +161,27 @@ button{
 }
 
 header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 
-background:
-linear-gradient(rgba(0,0,0,.75),
-rgba(0,0,0,.75)),
-url(images/Cuidado-con-el-Perro-Horizontal_White.webp);
+    padding:24px 32px;
 
-background-size:420px;
-background-repeat:no-repeat;
-background-position:right center;
+    background:#fff;
 
+    border-bottom:1px solid var(--border);
+
+    box-shadow:var(--shadow);
+
+    margin-bottom:20px;
 }
 
 header h2{
-    font-size:1.6rem;
-    color:var(--primary);
+    color:#111827;
 }
 
 header span{
-    color:var(--muted);
+    color:#6b7280;
 }
 
 .logout-btn{
