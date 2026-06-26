@@ -196,36 +196,26 @@ header{
 .header-right{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:24px;
 }
-
 .header-brands{
-    display:none;
+    display:flex;
     align-items:center;
     gap:14px;
 }
 
 .header-brands img{
+    display:block;
+    height:30px;
+    width:auto;
     object-fit:contain;
-    opacity:.55;
+    opacity:.85;
     transition:.25s;
 }
 
 .header-brands img:hover{
     opacity:1;
-    transform:scale(1.05);
-}
-
-.header-brands img:nth-child(1){
-    width:54px;
-}
-
-.header-brands img:nth-child(3){
-    width:30px;
-}
-
-.header-brands img:nth-child(5){
-    width:58px;
+    transform:scale(1.08);
 }
 
 .header-brands span{
