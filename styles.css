@@ -137,16 +137,6 @@ button{
     transition:.2s;
 }
 
-.login-card button,
-.save-btn{
-    width:100%;
-    background:linear-gradient(135deg,var(--primary),var(--secondary));
-    color:#fff;
-    font-weight:700;
-    border-radius:14px;
-    padding:15px;
-}
-
 .login-card button:hover,
 .save-btn:hover{
     transform:translateY(-1px);
@@ -198,21 +188,21 @@ header{
     align-items:center;
     gap:24px;
 }
+
 .header-brands{
     display:flex;
     align-items:center;
-    gap:14px;
+    gap:18px;
 }
 
 .header-brands img{
     display:block;
-    height:30px;
+    height:42px;
     width:auto;
     object-fit:contain;
-    opacity:.85;
+    opacity:.95;
     transition:.25s;
 }
-
 .header-brands img:hover{
     opacity:1;
     transform:scale(1.08);
@@ -471,14 +461,6 @@ header{
 
 /* ===== LOGOS ===== */
 
-.login-brands{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:18px;
-    margin-bottom:28px;
-}
-
 .login-brands img{
     display:block;
     object-fit:contain;
@@ -493,22 +475,28 @@ header{
 
 /* tamaños individuales */
 
+.login-brands{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:24px;
+    margin-bottom:34px;
+}
+
 .login-brands img:nth-child(1){
-    width:70px;
+    width:90px;
 }
 
 .login-brands img:nth-child(3){
-    width:38px;
+    width:52px;
 }
 
 .login-brands img:nth-child(5){
-    width:72px;
+    width:92px;
 }
 
 .brand-separator{
-    width:1px;
-    height:34px;
-    background:#d8d8d8;
+    height:42px;
 }
 
 /* ===== TITULO ===== */
@@ -532,50 +520,40 @@ header{
 /* ===== SOPORTE ===== */
 
 .support-footer{
-    margin-top:28px;
-    padding-top:18px;
+    margin-top:22px;
+    padding-top:14px;
     border-top:1px solid var(--border);
-
     display:flex;
     justify-content:space-between;
     align-items:center;
-    gap:20px;
+    gap:14px;
     flex-wrap:wrap;
 }
 
 .support-content{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
 }
-
 .support-content i{
-    font-size:1.8rem;
-    color:#25D366;
+    font-size:1.3rem;
 }
 
 .support-content strong{
-    display:block;
-    color:var(--text);
-    font-size:.95rem;
+    font-size:.85rem;
+    font-weight:600;
 }
 
 .support-content small{
-    display:block;
-    color:var(--muted);
-    font-size:.82rem;
+    font-size:.74rem;
+    color:#7b7b7b;
 }
 
 .support-footer a{
-    background:#25D366;
-    color:#fff;
-    text-decoration:none;
-    font-weight:600;
-    padding:10px 18px;
-    border-radius:12px;
-    transition:.25s;
+    padding:8px 14px;
+    font-size:.82rem;
+    border-radius:10px;
 }
-
 .support-footer a:hover{
     transform:translateY(-2px);
     box-shadow:0 8px 20px rgba(37,211,102,.25);
