@@ -59,21 +59,24 @@ async function login() {
         .value
         .trim();
 
-    const { data, error } =
-        await supabaseClient
-            .from("ccp_usuarios")
-            .select("*")
-            .eq("usuario", usuario)
-            .eq("password", password)
-            .eq("activo", true)
-            .single();
+   const { data, error } =
+    await supabaseClient
+        .from("ccp_usuarios")
+        .select("*")
+        .eq("usuario", usuario)
+        .eq("password", password)
+        .eq("activo", true)
+        .single();
 
-    if(error || !data){
+console.log(error);
+console.log(data);
 
-        alert("Usuario o contraseña incorrectos");
+if(error || !data){
 
-        return;
-    }
+    alert("Usuario o contraseña incorrectos");
+
+    return;
+}
 
     localStorage.setItem(
         "usuario",
