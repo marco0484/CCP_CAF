@@ -559,30 +559,112 @@ header{
     box-shadow:0 8px 20px rgba(37,211,102,.25);
 }
 
+
 @media (max-width:640px){
 
-    .support-footer{
+    /* LOGIN */
+
+    .login-card{
+        padding:24px;
+        border-radius:22px;
+    }
+
+    .login-brands{
+        gap:16px;
+        margin-bottom:24px;
+    }
+
+    .login-brands img:nth-child(1){
+        width:72px;
+    }
+
+    .login-brands img:nth-child(3){
+        width:42px;
+    }
+
+    .login-brands img:nth-child(5){
+        width:74px;
+    }
+
+    .brand-separator{
+        height:28px;
+    }
+
+    .login-card h1{
+        font-size:1.6rem;
+    }
+
+    .login-subtitle{
+        font-size:.85rem;
+        margin-bottom:22px;
+    }
+
+    /* HEADER */
+
+    header{
+        padding:18px;
         flex-direction:column;
-        text-align:center;
+        align-items:flex-start;
+        gap:18px;
     }
 
-    .support-content{
-        justify-content:center;
+    .header-left{
+        width:100%;
     }
 
-}
+    .header-left h2{
+        font-size:1.35rem;
+    }
 
+    .header-left span{
+        font-size:.85rem;
+    }
 
-/* TABLET */
+    .header-right{
+        width:100%;
+        justify-content:space-between;
+    }
 
-@media (max-width:900px){
+    .header-brands{
+        gap:10px;
+    }
+
+    .header-brands img{
+        height:28px;
+    }
+
+    .header-brands span{
+        height:22px;
+    }
+
+    .logout-btn{
+        width:46px;
+        height:46px;
+    }
+
+    /* DASHBOARD */
 
     .stats-grid{
         grid-template-columns:1fr;
+        padding:16px;
+    }
+
+    .search-box{
+        padding:0 16px 16px;
     }
 
     .quick-actions{
         grid-template-columns:repeat(2,1fr);
+        gap:12px;
+        padding:0 16px 20px;
+    }
+
+    .quick-actions button{
+        padding:18px;
+    }
+
+    .section{
+        padding:0 16px;
     }
 
     .client-card{
@@ -594,42 +676,36 @@ header{
         width:100%;
         justify-content:space-between;
     }
-}
 
-/* MOBILE */
+    /* SOPORTE */
 
-@media (max-width:640px){
-
-    header{
-        padding:18px;
+    .support-footer{
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
     }
 
-    header h2{
-        font-size:1.2rem;
+    .support-content{
+        justify-content:center;
     }
 
-    .quick-actions{
-        grid-template-columns:1fr 1fr;
-        padding:0 16px 20px;
+    .support-content strong{
+        font-size:.78rem;
     }
 
-    .stats-grid{
-        padding:16px;
+    .support-content small{
+        font-size:.68rem;
     }
 
-    .section{
-        padding:0 16px;
+    .support-footer a{
+        width:100%;
+        text-align:center;
     }
 
-    .search-box{
-        padding:0 16px 16px;
-    }
-
-    .login-card{
-        padding:28px;
-    }
+    /* MODAL */
 
     .modal-content{
         padding:20px;
     }
+
 }
