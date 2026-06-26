@@ -41,7 +41,7 @@ body::before{
 content:"";
 position:fixed;
 inset:0;
-background:url(img/Cuidado-con-el-perro-Simbolo_White.webp);
+background:url(images/Cuidado-con-el-perro-Simbolo_White.webp);
 background-size:450px;
 background-repeat:no-repeat;
 background-position:center;
@@ -166,7 +166,7 @@ header{
 background:
 linear-gradient(rgba(0,0,0,.75),
 rgba(0,0,0,.75)),
-url(img/Cuidado-con-el-Perro-Horizontal_White.webp);
+url(images/Cuidado-con-el-Perro-Horizontal_White.webp);
 
 background-size:420px;
 background-repeat:no-repeat;
