@@ -75,10 +75,10 @@ async function login() {
         return;
     }
 
-    data.rol =
-        data.id === 1
-        ? "admin"
-        : "usuario";
+   localStorage.setItem(
+    "usuario",
+    JSON.stringify(data)
+);
 
     data.cliente_id = data.id;
 
@@ -254,8 +254,11 @@ function iniciarVista(){
 
     if(!usuario) return;
 
-   if(Number(usuario.id) === 1){
+    console.log(usuario);
+console.log("ID:", usuario.id);
+console.log("TIPO:", typeof usuario.id);
 
+if(Number(usuario.rol) === 1){
     document.querySelector(".stats-grid").style.display="";
     document.querySelector(".search-box").style.display="";
     document.querySelector(".quick-actions").style.display="";
