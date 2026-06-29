@@ -254,13 +254,17 @@ function iniciarVista(){
 
     if(!usuario) return;
 
-    if(usuario.id === 1){
+   if(Number(usuario.id) === 1){
 
-        cargarClientes();
+    document.querySelector(".stats-grid").style.display="";
+    document.querySelector(".search-box").style.display="";
+    document.querySelector(".quick-actions").style.display="";
 
-        return;
+    cargarClientes();
 
-    }
+    return;
+
+}
 
     cargarVistaUsuario(usuario.id);
 
