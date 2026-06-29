@@ -38,7 +38,7 @@ document.addEventListener(
                 .getElementById("appScreen")
                 .classList.remove("hidden");
 
-            cargarClientes();
+            iniciarVista();
         }
     }
 );
@@ -49,34 +49,38 @@ document.addEventListener(
 
 async function login() {
 
-    const usuario =
+    const nombre =
         document.getElementById("email")
         .value
         .trim();
 
-    const password =
+    const key =
         document.getElementById("password")
         .value
         .trim();
 
-   const { data, error } =
-    await supabaseClient
-        .from("ccp_usuarios")
-        .select("*")
-        .eq("usuario", usuario)
-        .eq("password", password)
-        .eq("activo", true)
-        .single();
+    const { data, error } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .select("*")
+            .eq("nombre", nombre)
+            .eq("key", key)
+            .eq("activo", true)
+            .single();
 
-console.log(error);
-console.log(data);
+    if(error || !data){
 
-if(error || !data){
+        alert("Usuario o clave incorrectos");
 
-    alert("Usuario o contraseña incorrectos");
+        return;
+    }
 
-    return;
-}
+    data.rol =
+        data.id === 1
+        ? "admin"
+        : "usuario";
+
+    data.cliente_id = data.id;
 
     localStorage.setItem(
         "usuario",
@@ -91,7 +95,7 @@ if(error || !data){
         .getElementById("appScreen")
         .classList.remove("hidden");
 
-    cargarClientes();
+    iniciarVista();
 }
 
 function logout() {
@@ -237,6 +241,138 @@ function renderClientes() {
     });
 
     actualizarResumen();
+}
+
+/* VISTA X CLIENTE*/
+
+function iniciarVista(){
+
+    const usuario =
+        JSON.parse(
+            localStorage.getItem("usuario")
+        );
+
+    if(!usuario) return;
+
+    if(usuario.id === 1){
+
+        cargarClientes();
+
+        return;
+
+    }
+
+    cargarVistaUsuario(usuario.id);
+
+}
+
+async function cargarVistaUsuario(clienteId){
+
+    document.querySelector(".stats-grid").style.display="none";
+
+    document.querySelector(".search-box").style.display="none";
+
+    document.querySelector(".quick-actions").style.display="none";
+
+    const { data:cliente,error:errorCliente }=
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select("*")
+            .eq("id",clienteId)
+            .single();
+
+    if(errorCliente){
+
+        alert(errorCliente.message);
+
+        return;
+
+    }
+
+    const { data:movimientos,error:errorMovimientos }=
+        await supabaseClient
+            .from("ccp_movimientos")
+            .select("*")
+            .eq("cliente_id",clienteId)
+            .order("fecha",{ascending:false});
+
+    if(errorMovimientos){
+
+        alert(errorMovimientos.message);
+
+        return;
+
+    }
+
+    const container=
+        document.getElementById("clientsList");
+
+    container.innerHTML=`
+
+        <div class="client-card">
+
+            <div class="client-left">
+
+                <div class="client-name">
+                    ${cliente.nombre}
+                </div>
+
+                <div class="client-last">
+                    Saldo actual
+                </div>
+
+            </div>
+
+            <div class="client-right">
+
+                <div class="client-balance ${
+                    Number(cliente.saldo)>500
+                    ? "red"
+                    : Number(cliente.saldo)>100
+                    ? "orange"
+                    : "green"
+                }">
+
+                    $${Number(cliente.saldo).toFixed(2)}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="section-title" style="margin-top:30px;">
+
+            <h3>Mi consumo</h3>
+
+        </div>
+
+        <div class="historial-list">
+
+            ${movimientos.map(m=>`
+
+                <div class="historial-item">
+
+                    <strong>${m.tipo}</strong>
+
+                    <div>${m.concepto||""}</div>
+
+                    <div>
+                        $${Number(m.monto).toFixed(2)}
+                    </div>
+
+                    <div style="font-size:.8rem;color:#888;">
+                        ${new Date(m.fecha).toLocaleString()}
+                    </div>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
+    `;
+
 }
 
 /* ========================= */
