@@ -1,7 +1,4 @@
-
-/* ========================= */
 /* SUPABASE */
-/* ========================= */
 
 const SUPABASE_URL =
   "https://caoqqzzwwpiivmqqeigw.supabase.co";
@@ -15,9 +12,7 @@ const supabaseClient =
     SUPABASE_KEY
   );
 
-/* ========================= */
 /* VARIABLES */
-/* ========================= */
 
 let clientes = [];
 
@@ -43,9 +38,7 @@ document.addEventListener(
     }
 );
 
-/* ========================= */
 /* LOGIN */
-/* ========================= */
 
 async function login() {
 
@@ -105,9 +98,7 @@ function logout() {
     location.reload();
 }
 
-/* ========================= */
 /* CLIENTES */
-/* ========================= */
 
 async function cargarClientes() {
 
@@ -136,16 +127,12 @@ async function cargarClientes() {
 
         return;
     }
-
     clientes = data || [];
-
     console.log("Clientes:", clientes);
-
     renderClientes();
 }
 
 function renderClientes() {
-
     const container =
         document.getElementById("clientsList");
 
@@ -176,67 +163,65 @@ function renderClientes() {
         else if (Number(cliente.saldo) > 100) {
             color = "orange";
         }
-
         container.innerHTML += `
-
         <div class="client-card">
-
             <div class="client-left">
-
                 <div class="client-name">
                     ${cliente.nombre}
                 </div>
-
                 <div class="client-last">
                     ${cliente.departamento || "Sin departamento"}
                 </div>
-
             </div>
-
             <div class="client-right">
-
     <div class="client-balance ${color}">
         $${Number(cliente.saldo).toFixed(2)}
     </div>
 
-    <div style="display:flex; gap:8px;">
+  <div style="display:flex; gap:8px;">
 
+    <button
+        class="notify-btn"
+        onclick="verHistorial(${cliente.id})"
+        title="Ver historial"
+    >
+        <i class="fa-solid fa-clock-rotate-left"></i>
+    </button>
+
+    <button
+        class="notify-btn"
+        onclick="editarCliente(${cliente.id})"
+        title="Editar cliente"
+    >
+        <i class="fa-solid fa-pen-to-square"></i>
+    </button>
+
+    <button
+        class="notify-btn"
+        onclick="desactivarCliente(${cliente.id})"
+        title="Dar de baja"
+    >
+        <i class="fa-solid fa-user-xmark"></i>
+    </button>
+
+    ${
+        cliente.telefono
+        ?
+        `
         <button
             class="notify-btn"
-            onclick="verHistorial(${cliente.id})"
+            onclick="notificar(${cliente.id})"
+            title="WhatsApp"
         >
-            <i class="fa-solid fa-clock-rotate-left"></i>
+            <i class="fa-brands fa-whatsapp"></i>
         </button>
-
-        <button
-    class="notify-btn"
-    onclick="desactivarCliente(${cliente.id})"
->
-    <i class="fa-solid fa-user-xmark"></i>
-</button>
-
-
-        ${
-            cliente.telefono
-            ?
-            `
-            <button
-                class="notify-btn"
-                onclick="notificar(${cliente.id})"
-            >
-                <i class="fa-brands fa-whatsapp"></i>
-            </button>
-            `
-            :
-            ""
-        }
-
-    </div>
+        `
+        :
+        ""
+    }
 
 </div>
-
         </div>
-
         `;
     });
 
@@ -254,7 +239,7 @@ function iniciarVista(){
 
     if(!usuario) return;
 
-    console.log(usuario);
+console.log(usuario);
 console.log("ID:", usuario.id);
 console.log("TIPO:", typeof usuario.id);
 
@@ -264,21 +249,15 @@ if(Number(usuario.rol) === 1){
     document.querySelector(".quick-actions").style.display="";
 
     cargarClientes();
-
     return;
 
 }
-
     cargarVistaUsuario(usuario.id);
-
 }
 
 async function cargarVistaUsuario(clienteId){
-
     document.querySelector(".stats-grid").style.display="none";
-
     document.querySelector(".search-box").style.display="none";
-
     document.querySelector(".quick-actions").style.display="none";
 
     const { data:cliente,error:errorCliente }=
@@ -289,11 +268,8 @@ async function cargarVistaUsuario(clienteId){
             .single();
 
     if(errorCliente){
-
         alert(errorCliente.message);
-
         return;
-
     }
 
     const { data:movimientos,error:errorMovimientos }=
@@ -304,34 +280,24 @@ async function cargarVistaUsuario(clienteId){
             .order("fecha",{ascending:false});
 
     if(errorMovimientos){
-
         alert(errorMovimientos.message);
-
         return;
-
     }
 
     const container=
         document.getElementById("clientsList");
 
     container.innerHTML=`
-
         <div class="client-card">
-
             <div class="client-left">
-
                 <div class="client-name">
                     ${cliente.nombre}
                 </div>
-
                 <div class="client-last">
                     Saldo actual
                 </div>
-
             </div>
-
             <div class="client-right">
-
                 <div class="client-balance ${
                     Number(cliente.saldo)>500
                     ? "red"
@@ -339,52 +305,31 @@ async function cargarVistaUsuario(clienteId){
                     ? "orange"
                     : "green"
                 }">
-
                     $${Number(cliente.saldo).toFixed(2)}
-
                 </div>
-
             </div>
-
         </div>
-
         <div class="section-title" style="margin-top:30px;">
-
             <h3>Mi consumo</h3>
-
         </div>
-
         <div class="historial-list">
-
             ${movimientos.map(m=>`
-
                 <div class="historial-item">
-
                     <strong>${m.tipo}</strong>
-
                     <div>${m.concepto||""}</div>
-
                     <div>
                         $${Number(m.monto).toFixed(2)}
                     </div>
-
                     <div style="font-size:.8rem;color:#888;">
                         ${new Date(m.fecha).toLocaleString()}
                     </div>
-
                 </div>
-
             `).join("")}
-
         </div>
-
     `;
-
 }
 
-/* ========================= */
 /* DASHBOARD */
-/* ========================= */
 
 function actualizarResumen() {
 
@@ -425,9 +370,7 @@ function actualizarResumen() {
     }
 }
 
-/* ========================= */
 /* WHATSAPP */
-/* ========================= */
 
 function notificar(id) {
 
@@ -452,9 +395,7 @@ Gracias ☕`;
     );
 }
 
-/* ========================= */
 /* BUSCADOR */
-/* ========================= */
 
 document.addEventListener("input", e => {
 
@@ -577,7 +518,6 @@ function nuevoCliente() {
 }
 
 
-
 async function nuevoConsumo() {
 
     const { data: productos } =
@@ -591,9 +531,7 @@ async function nuevoConsumo() {
 
     document.getElementById("modalBody")
         .innerHTML = `
-
         <div class="modal-body">
-
             <select id="consumoCliente">
                 ${clientes.map(c => `
                     <option value="${c.id}">
@@ -601,9 +539,7 @@ async function nuevoConsumo() {
                     </option>
                 `).join("")}
             </select>
-
            <select id="consumoPiso">
-
     <option value="23">
         Piso 23
     </option>
@@ -613,13 +549,11 @@ async function nuevoConsumo() {
     </option>
 
 </select>
-
             <select
                 id="consumoProducto"
                 multiple
                 size="8"
             >
-
                 ${productos.map(p => `
                     <option
                         value="${p.id}"
@@ -629,16 +563,13 @@ async function nuevoConsumo() {
                         ${p.nombre} - $${p.precio}
                     </option>
                 `).join("")}
-
             </select>
-
             <button
                 class="save-btn"
                 onclick="guardarConsumo()"
             >
                 Guardar Consumo
             </button>
-
         </div>
     `;
 
@@ -665,21 +596,13 @@ async function guardarConsumo() {
 
     const movimientos =
         productosSeleccionados.map(option => ({
-
             cliente_id: clienteId,
-
             producto_id: option.value,
-
             piso_id: pisoId,
-
             tipo: "CONSUMO",
-
             concepto: option.dataset.nombre,
-
             monto: Number(option.dataset.precio),
-
             fecha: new Date().toISOString()
-
         }));
 
     const { error } =
@@ -1083,5 +1006,112 @@ async function desactivarCliente(id){
 
     alert("Cliente dado de baja");
 
+    cargarClientes();
+}
+
+async function editarCliente(id){
+
+    const { data: cliente, error } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    document.getElementById("modalTitle").innerHTML =
+        "Editar cliente";
+
+    document.getElementById("modalBody").innerHTML = `
+
+        <div class="modal-body">
+
+            <input
+                id="editNombre"
+                value="${cliente.nombre || ""}"
+                placeholder="Nombre"
+            >
+
+            <input
+                id="editTelefono"
+                value="${cliente.telefono || ""}"
+                placeholder="Teléfono"
+            >
+
+            <input
+                id="editDepartamento"
+                value="${cliente.departamento || ""}"
+                placeholder="Departamento"
+            >
+
+            <input
+                id="editKey"
+                value="${cliente.key || ""}"
+                placeholder="Contraseña"
+            >
+
+            <label style="display:flex;align-items:center;gap:10px;">
+
+                <input
+                    id="editActivo"
+                    type="checkbox"
+                    ${cliente.activo ? "checked" : ""}
+                >
+
+                Activo
+
+            </label>
+
+            <button
+                class="save-btn"
+                onclick="guardarEdicionCliente(${id})"
+            >
+                Guardar cambios
+            </button>
+
+        </div>
+
+    `;
+
+    abrirModal();
+}
+
+async function guardarEdicionCliente(id){
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .update({
+
+                nombre:
+                    document.getElementById("editNombre").value,
+
+                telefono:
+                    document.getElementById("editTelefono").value,
+
+                departamento:
+                    document.getElementById("editDepartamento").value,
+
+                key:
+                    document.getElementById("editKey").value,
+
+                activo:
+                    document.getElementById("editActivo").checked
+
+            })
+            .eq("id", id);
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+    }
+    alert("Cliente actualizado");
+    cerrarModal();
     cargarClientes();
 }
