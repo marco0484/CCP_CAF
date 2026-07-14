@@ -12,9 +12,6 @@ rel="stylesheet"
 </head>
 
 <body>
-
-<!-- LOGIN -->
-
 <section id="loginScreen" class="screen">
     <div class="login-card">
 <div class="login-brands">
@@ -27,9 +24,7 @@ rel="stylesheet"
 
 <h1>Iniciar Sesión</h1>
 
-<p class="login-subtitle">
-    Accede para administrar los consumos de la cafetería.
-</p>
+<p class="login-subtitle"> Inicia sesión para consultar tu cuenta de cafetería.</p>
         <input
                 type="tel"
                 placeholder="Número de teléfono"
@@ -50,8 +45,7 @@ rel="stylesheet"
 
         <p class="privacy-link">
     <a href="aviso-privacidad.html">
-        Aviso de Privacidad
-    </a>
+        Aviso de Privacidad </a>
 </p>
 <footer class="support-footer">
     <div class="support-content">
@@ -89,7 +83,14 @@ rel="stylesheet"
     </div>
 
     <div class="header-right">
+            <div class="logged-user">
+                <i class="fa-solid fa-circle-user"></i>
 
+                <div>
+                    <strong id="userName">Usuario</strong>
+                    <span id="userPhone">Sin teléfono</span>
+                </div>
+            </div>
         <div class="header-brands">
             <img src="images/c&a.webp" alt="C&A">
             <span></span>
@@ -105,8 +106,6 @@ rel="stylesheet"
     </div>
 
 </header>
-
-    <!-- RESUMEN -->
 
 <div class="stats-grid">
 
@@ -127,22 +126,16 @@ rel="stylesheet"
 
 </div>
 
-    <!-- BUSCADOR -->
-
     <div class="search-box">
-
         <input
             type="text"
             placeholder="Buscar cliente..."
             id="searchClient"
         >
-
     </div>
 
-    <!-- ACCIONES -->
 
 <div class="quick-actions">
-
     <button onclick="nuevoCliente()">
         <i class="fa-solid fa-user-plus"></i>
         Cliente
@@ -208,6 +201,5 @@ rel="stylesheet"
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
-
 </body>
 </html>

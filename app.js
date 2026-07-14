@@ -249,32 +249,31 @@ function renderClientes() {
 
 function iniciarVista(){
 
-   const usuario =
-    JSON.parse(
-        sessionStorage.getItem("usuario")
-    );
+    const usuario =
+        JSON.parse(
+            sessionStorage.getItem("usuario")
+        );
 
     if(!usuario) return;
 
     const userInfo =
-    document.getElementById("userInfo");
+        document.getElementById("userInfo");
 
-if (userInfo) {
-    userInfo.textContent =
-        `${usuario.nombre} · ${usuario.telefono}`;
-}
+    if(userInfo){
+        userInfo.textContent =
+            `${usuario.nombre} · ${usuario.telefono}`;
+    }
 
+    if(Number(usuario.rol) === 1){
 
+        document.querySelector(".stats-grid").style.display = "";
+        document.querySelector(".search-box").style.display = "";
+        document.querySelector(".quick-actions").style.display = "";
 
-if(Number(usuario.rol) === 1){
-    document.querySelector(".stats-grid").style.display="";
-    document.querySelector(".search-box").style.display="";
-    document.querySelector(".quick-actions").style.display="";
+        cargarClientes();
+        return;
+    }
 
-    cargarClientes();
-    return;
-
-}
     cargarVistaUsuario(usuario.id);
 }
 
