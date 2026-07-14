@@ -41,55 +41,73 @@ document.addEventListener(
 /* LOGIN */
 
 async function login() {
-
-    const nombre =
-        document.getElementById("email")
-        .value
-        .trim();
+    const telefono =
+        document.getElementById("telefono")
+            .value
+            .replace(/\D/g, "");
 
     const key =
         document.getElementById("password")
-        .value
-        .trim();
+            .value
+            .trim();
 
-    const { data, error } =
-        await supabaseClient
-            .from("ccp_clientes")
-            .select("*")
-            .eq("nombre", nombre)
-            .eq("key", key)
-            .eq("activo", true)
-            .single();
-
-    if(error || !data){
-
-        alert("Usuario o clave incorrectos");
-
+    if (!telefono || !key) {
+        alert("Ingresa teléfono y contraseña");
         return;
     }
 
-   localStorage.setItem(
-    "usuario",
-    JSON.stringify(data)
-);
+    if (telefono.length !== 10) {
+        alert("Ingresa un teléfono válido de 10 dígitos");
+        return;
+    }
 
-    data.cliente_id = data.id;
+    try {
+        const respuesta =
+            await fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    telefono,
+                    key
+                })
+            });
 
-    localStorage.setItem(
-        "usuario",
-        JSON.stringify(data)
-    );
+        const resultado =
+            await respuesta.json();
 
-    document
-        .getElementById("loginScreen")
-        .classList.add("hidden");
+        if (!respuesta.ok) {
+            alert(
+                resultado.error ||
+                "No se pudo iniciar sesión"
+            );
 
-    document
-        .getElementById("appScreen")
-        .classList.remove("hidden");
+            return;
+        }
 
-    iniciarVista();
+        localStorage.setItem(
+            "usuario",
+            JSON.stringify(resultado.usuario)
+        );
+
+        document
+            .getElementById("loginScreen")
+            .classList.add("hidden");
+
+        document
+            .getElementById("appScreen")
+            .classList.remove("hidden");
+
+        iniciarVista();
+
+    } catch (error) {
+        console.error("Error en login:", error);
+
+        alert("No se pudo conectar con el servidor");
+    }
 }
+
 
 function logout() {
 
@@ -953,7 +971,7 @@ async function cancelarMovimiento(id){
             .update({
                 cancelado: true,
                 motivo_cancelacion: motivo,
-                cancelado_por: usuario.usuario,
+                cancelado_por: usuario.nombre,
                 fecha_cancelacion:
                     new Date().toISOString()
             })
@@ -1014,7 +1032,7 @@ async function editarCliente(id){
     const { data: cliente, error } =
         await supabaseClient
             .from("ccp_clientes")
-            .select("*")
+            .select("id,nombre,telefono,departamento,activo")
             .eq("id", id)
             .single();
 
@@ -1050,8 +1068,8 @@ async function editarCliente(id){
 
             <input
                 id="editKey"
-                value="${cliente.key || ""}"
-                placeholder="Contraseña"
+                type="password"
+                placeholder="Nueva contraseña (opcional)"
             >
 
             <label style="display:flex;align-items:center;gap:10px;">
@@ -1082,27 +1100,35 @@ async function editarCliente(id){
 
 async function guardarEdicionCliente(id){
 
+    const cambios = {
+
+        nombre:
+            document.getElementById("editNombre").value,
+
+        telefono:
+            document.getElementById("editTelefono").value,
+
+        departamento:
+            document.getElementById("editDepartamento").value,
+
+        activo:
+            document.getElementById("editActivo").checked
+
+    };
+
+    const nuevaKey =
+        document.getElementById("editKey")
+            .value
+            .trim();
+
+    if(nuevaKey){
+        cambios.key = nuevaKey;
+    }
+
     const { error } =
         await supabaseClient
             .from("ccp_clientes")
-            .update({
-
-                nombre:
-                    document.getElementById("editNombre").value,
-
-                telefono:
-                    document.getElementById("editTelefono").value,
-
-                departamento:
-                    document.getElementById("editDepartamento").value,
-
-                key:
-                    document.getElementById("editKey").value,
-
-                activo:
-                    document.getElementById("editActivo").checked
-
-            })
+            .update(cambios)
             .eq("id", id);
 
     if(error){
@@ -1111,7 +1137,10 @@ async function guardarEdicionCliente(id){
 
         return;
     }
+
     alert("Cliente actualizado");
+
     cerrarModal();
+
     cargarClientes();
 }
