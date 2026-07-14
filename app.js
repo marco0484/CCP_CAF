@@ -16,27 +16,27 @@ const supabaseClient =
 
 let clientes = [];
 
-const usuarioGuardado =
-    localStorage.getItem("usuario");
+document.addEventListener("DOMContentLoaded", () => {
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+    localStorage.removeItem("usuario");
 
-        if(usuarioGuardado){
+    const usuarioGuardado =
+        sessionStorage.getItem("usuario");
 
-            document
-                .getElementById("loginScreen")
-                .classList.add("hidden");
-
-            document
-                .getElementById("appScreen")
-                .classList.remove("hidden");
-
-            iniciarVista();
-        }
+    if (!usuarioGuardado) {
+        return;
     }
-);
+
+    document
+        .getElementById("loginScreen")
+        .classList.add("hidden");
+
+    document
+        .getElementById("appScreen")
+        .classList.remove("hidden");
+
+    iniciarVista();
+});
 
 /* LOGIN */
 
@@ -86,10 +86,10 @@ async function login() {
             return;
         }
 
-        localStorage.setItem(
-            "usuario",
-            JSON.stringify(resultado.usuario)
-        );
+        sessionStorage.setItem(
+    "usuario",
+    JSON.stringify(resultado.usuario)
+);
 
         document
             .getElementById("loginScreen")
@@ -110,9 +110,8 @@ async function login() {
 
 
 function logout() {
-
+    sessionStorage.removeItem("usuario");
     localStorage.removeItem("usuario");
-
     location.reload();
 }
 
@@ -250,16 +249,22 @@ function renderClientes() {
 
 function iniciarVista(){
 
-    const usuario =
-        JSON.parse(
-            localStorage.getItem("usuario")
-        );
+   const usuario =
+    JSON.parse(
+        sessionStorage.getItem("usuario")
+    );
 
     if(!usuario) return;
 
-console.log(usuario);
-console.log("ID:", usuario.id);
-console.log("TIPO:", typeof usuario.id);
+    const userInfo =
+    document.getElementById("userInfo");
+
+if (userInfo) {
+    userInfo.textContent =
+        `${usuario.nombre} · ${usuario.telefono}`;
+}
+
+
 
 if(Number(usuario.rol) === 1){
     document.querySelector(".stats-grid").style.display="";
@@ -961,9 +966,9 @@ async function cancelarMovimiento(id){
     if(!motivo) return;
 
     const usuario =
-        JSON.parse(
-            localStorage.getItem("usuario")
-        );
+    JSON.parse(
+        sessionStorage.getItem("usuario")
+    );
 
     const { error } =
         await supabaseClient
