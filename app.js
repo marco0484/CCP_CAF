@@ -159,6 +159,7 @@ async function cargarClientes({
         supabaseClient
             .from("ccp_v_saldos_clientes")
             .select("*")
+            .gt("saldo", 0)
             .order("saldo", {
                 ascending: false
             });
