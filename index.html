@@ -26,18 +26,22 @@ rel="stylesheet"
 
 <p class="login-subtitle"> Inicia sesión para consultar tu cuenta de cafetería.</p>
         <input
-                type="tel"
-                placeholder="Número de teléfono"
-                id="telefono"
-                autocomplete="username"
-                inputmode="numeric"
-            >
+    type="tel"
+    placeholder="Número de teléfono"
+    id="telefono"
+    inputmode="numeric"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="none"
+    spellcheck="false"
+>
 
-        <input
-            type="password"
-            placeholder="Contraseña"
-            id="password"
-        >
+<input
+    type="password"
+    placeholder="Contraseña"
+    id="password"
+    autocomplete="new-password"
+>
 
         <button onclick="login()">
             Ingresar

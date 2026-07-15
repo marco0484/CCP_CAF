@@ -574,23 +574,22 @@ async function nuevoConsumo() {
         .innerHTML = `
         <div class="modal-body">
 
-            <input
-                type="text"
-                id="buscarClienteConsumo"
-                placeholder="Buscar cliente por nombre..."
-                autocomplete="off"
-            >
+                <input
+    type="text"
+    id="buscarClienteConsumo"
+    placeholder="Buscar cliente por nombre..."
+    autocomplete="off"
+>
 
-            <select
-                id="consumoCliente"
-                size="7"
-            >
-                ${clientesOrdenados.map(c => `
-                    <option value="${c.id}">
-                        ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
-                    </option>
-                `).join("")}
-            </select>
+<select id="consumoCliente">
+    <option value="">Selecciona un cliente</option>
+
+    ${clientesOrdenados.map(c => `
+        <option value="${c.id}">
+            ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
+        </option>
+    `).join("")}
+</select>
 
             <select id="consumoPiso">
                 <option value="23">
@@ -636,51 +635,56 @@ async function nuevoConsumo() {
     const selectCliente =
         document.getElementById("consumoCliente");
 
-    function filtrarClientes() {
+function filtrarClientes() {
 
-        const texto = buscador.value
-            .trim()
+    const texto = buscador.value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    const filtrados = clientesOrdenados.filter(cliente => {
+
+        const nombre = `${cliente.nombre || ""} ${cliente.departamento || ""}`
             .toLowerCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
 
-        const filtrados = clientesOrdenados.filter(cliente => {
+        return nombre.includes(texto);
+    });
 
-            const nombre = `${cliente.nombre || ""} ${cliente.departamento || ""}`
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "");
+    selectCliente.innerHTML = `
+        <option value="">
+            ${
+                filtrados.length
+                    ? "Selecciona un cliente"
+                    : "No se encontraron clientes"
+            }
+        </option>
 
-            return nombre.includes(texto);
-        });
-
-        selectCliente.innerHTML = filtrados.map(c => `
+        ${filtrados.map(c => `
             <option value="${c.id}">
                 ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
             </option>
-        `).join("");
-
-        if (filtrados.length === 1) {
-            selectCliente.selectedIndex = 0;
-        }
-    }
-
-    buscador.addEventListener("input", filtrarClientes);
-
-    buscador.addEventListener("keydown", event => {
-
-        if (
-            event.key === "ArrowDown" &&
-            selectCliente.options.length > 0
-        ) {
-            event.preventDefault();
-            selectCliente.focus();
-            selectCliente.selectedIndex = 0;
-        }
-    });
-
-    buscador.focus();
+        `).join("")}
+    `;
 }
+
+buscador.addEventListener("input", filtrarClientes);
+
+buscador.addEventListener("keydown", event => {
+
+    if (
+        event.key === "ArrowDown" &&
+        selectCliente.options.length > 1
+    ) {
+        event.preventDefault();
+        selectCliente.focus();
+        selectCliente.selectedIndex = 1;
+    }
+});
+
+buscador.focus();
 
 async function guardarConsumo() {
 
