@@ -685,7 +685,7 @@ buscador.addEventListener("keydown", event => {
 });
 
 buscador.focus();
-
+}
 async function guardarConsumo() {
 
     
