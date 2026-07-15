@@ -729,21 +729,72 @@ async function nuevoConsumo() {
                     </option>
                 </select>
 
-                <select
-                    id="consumoProducto"
-                    multiple
-                    size="8"
-                >
-                    ${(productos || []).map(producto => `
-                        <option
-                            value="${producto.id}"
-                            data-precio="${producto.precio}"
-                            data-nombre="${producto.nombre}"
-                        >
-                            ${producto.nombre} - $${Number(producto.precio).toFixed(2)}
-                        </option>
-                    `).join("")}
-                </select>
+                <div class="productos-selector">
+
+    <div class="productos-selector-header">
+        <div>
+            <strong>Productos</strong>
+            <small>Selecciona la cantidad</small>
+        </div>
+
+        <span id="totalConsumo">
+            $0.00
+        </span>
+    </div>
+
+    <div class="productos-lista">
+
+        ${(productos || []).map(producto => `
+
+            <div
+                class="producto-row"
+                data-id="${producto.id}"
+                data-nombre="${producto.nombre}"
+                data-precio="${producto.precio}"
+            >
+
+                <div class="producto-info">
+                    <strong>
+                        ${producto.nombre}
+                    </strong>
+
+                    <small>
+                        $${Number(producto.precio).toFixed(2)}
+                    </small>
+                </div>
+
+                <div class="cantidad-control">
+
+                    <button
+                        type="button"
+                        onclick="cambiarCantidadProducto(${producto.id}, -1)"
+                    >
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+
+                    <span
+                        class="producto-cantidad"
+                        id="cantidadProducto${producto.id}"
+                    >
+                        0
+                    </span>
+
+                    <button
+                        type="button"
+                        onclick="cambiarCantidadProducto(${producto.id}, 1)"
+                    >
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("")}
+
+    </div>
+
+</div>
 
                 <button
                     class="save-btn"
@@ -763,6 +814,61 @@ async function nuevoConsumo() {
         .getElementById("buscarClienteConsumo")
         .focus();
 }
+
+
+function cambiarCantidadProducto(productoId, cambio) {
+
+    const cantidadElement =
+        document.getElementById(
+            `cantidadProducto${productoId}`
+        );
+
+    if (!cantidadElement) {
+        return;
+    }
+
+    const cantidadActual =
+        Number(cantidadElement.textContent);
+
+    const nuevaCantidad =
+        Math.max(0, cantidadActual + cambio);
+
+    cantidadElement.textContent =
+        nuevaCantidad;
+
+    actualizarTotalConsumo();
+}
+
+function actualizarTotalConsumo() {
+
+    let total = 0;
+
+    document
+        .querySelectorAll(".producto-row")
+        .forEach(producto => {
+
+            const cantidad =
+                Number(
+                    producto
+                        .querySelector(".producto-cantidad")
+                        .textContent
+                );
+
+            const precio =
+                Number(producto.dataset.precio);
+
+            total += cantidad * precio;
+        });
+
+    const totalElement =
+        document.getElementById("totalConsumo");
+
+    if (totalElement) {
+        totalElement.textContent =
+            `$${total.toFixed(2)}`;
+    }
+}
+
 
 function configurarBuscadorClienteConsumo() {
 
@@ -951,26 +1057,54 @@ async function guardarConsumo() {
     const pisoId =
         document.getElementById("consumoPiso").value;
 
-    const productosSeleccionados =
-        [...document.getElementById("consumoProducto").selectedOptions];
+    const productosSeleccionados = [];
 
-    if(productosSeleccionados.length === 0){
+document
+    .querySelectorAll(".producto-row")
+    .forEach(producto => {
 
-        alert("Selecciona al menos un producto");
+        const cantidad =
+            Number(
+                producto
+                    .querySelector(".producto-cantidad")
+                    .textContent
+            );
 
-        return;
-    }
+        if (cantidad > 0) {
+
+            productosSeleccionados.push({
+                id: producto.dataset.id,
+                nombre: producto.dataset.nombre,
+                precio: Number(producto.dataset.precio),
+                cantidad
+            });
+        }
+    });
+
+if (productosSeleccionados.length === 0) {
+    alert("Selecciona al menos un producto");
+    return;
+}
 
     const movimientos =
-        productosSeleccionados.map(option => ({
-            cliente_id: clienteId,
-            producto_id: option.value,
-            piso_id: pisoId,
-            tipo: "CONSUMO",
-            concepto: option.dataset.nombre,
-            monto: Number(option.dataset.precio),
-            fecha: new Date().toISOString()
-        }));
+    productosSeleccionados.flatMap(producto =>
+
+        Array.from(
+            {
+                length: producto.cantidad
+            },
+            () => ({
+                cliente_id: clienteId,
+                producto_id: producto.id,
+                piso_id: pisoId,
+                tipo: "CONSUMO",
+                concepto: producto.nombre,
+                monto: producto.precio,
+                fecha: new Date().toISOString()
+            })
+        )
+
+    );
 
     const { error } =
         await supabaseClient
@@ -984,10 +1118,16 @@ async function guardarConsumo() {
         return;
     }
 
-    alert(
-        `${movimientos.length} consumos registrados`
+    const total =
+    movimientos.reduce(
+        (suma, movimiento) =>
+            suma + Number(movimiento.monto),
+        0
     );
 
+alert(
+    `${movimientos.length} productos registrados · Total $${total.toFixed(2)}`
+);
     cerrarModal();
     cargarClientes();
 }

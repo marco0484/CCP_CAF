@@ -812,6 +812,132 @@ header{
     color:var(--muted);
 }
 
+.productos-selector{
+    border:1px solid var(--border);
+    border-radius:16px;
+    overflow:hidden;
+    background:#fff;
+}
+
+.productos-selector-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:14px 16px;
+    background:#f8fafc;
+    border-bottom:1px solid var(--border);
+}
+
+.productos-selector-header strong,
+.productos-selector-header small{
+    display:block;
+}
+
+.productos-selector-header strong{
+    font-size:.9rem;
+}
+
+.productos-selector-header small{
+    color:var(--muted);
+    font-size:.75rem;
+}
+
+#totalConsumo{
+    font-size:1.1rem;
+    font-weight:800;
+    color:var(--success);
+}
+
+.productos-lista{
+    max-height:340px;
+    overflow-y:auto;
+}
+
+.producto-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 14px;
+    border-bottom:1px solid #f1f3f5;
+}
+
+.producto-row:last-child{
+    border-bottom:none;
+}
+
+.producto-row:hover{
+    background:#fafafa;
+}
+
+.producto-info{
+    min-width:0;
+}
+
+.producto-info strong,
+.producto-info small{
+    display:block;
+}
+
+.producto-info strong{
+    font-size:.88rem;
+}
+
+.producto-info small{
+    margin-top:2px;
+    color:var(--muted);
+    font-size:.76rem;
+}
+
+.cantidad-control{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+}
+
+.cantidad-control button{
+    width:34px;
+    height:34px;
+    display:grid;
+    place-items:center;
+    border-radius:10px;
+    background:#f3f4f6;
+    color:var(--primary);
+}
+
+.cantidad-control button:hover{
+    background:var(--primary);
+    color:#fff;
+}
+
+.producto-cantidad{
+    min-width:24px;
+    text-align:center;
+    font-weight:800;
+}
+
+@media(max-width:640px){
+
+    .productos-lista{
+        max-height:310px;
+    }
+
+    .producto-row{
+        padding:12px;
+    }
+
+    .cantidad-control{
+        gap:7px;
+    }
+
+    .cantidad-control button{
+        width:36px;
+        height:36px;
+    }
+}
+
 @media(max-width:700px){
     .logged-user{
         max-width:150px;
