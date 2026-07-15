@@ -1,5 +1,3 @@
-/* SUPABASE */
-
 const SUPABASE_URL =
   "https://caoqqzzwwpiivmqqeigw.supabase.co";
 
@@ -12,12 +10,15 @@ const supabaseClient =
     SUPABASE_KEY
   );
 
-/* VARIABLES */
-
 let clientes = [];
+const CLIENTES_POR_PAGINA = 20;
+let paginaClientes = 0;
+let cargandoClientes = false;
+let hayMasClientes = true;
+let temporizadorBusqueda = null;
+let busquedaClientes = "";
 
 document.addEventListener("DOMContentLoaded", () => {
-
     localStorage.removeItem("usuario");
 
     const usuarioGuardado =
@@ -38,7 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
     iniciarVista();
 });
 
-/* LOGIN */
 
 async function login() {
     const telefono =
@@ -115,57 +115,181 @@ function logout() {
     location.reload();
 }
 
-/* CLIENTES */
 
-async function cargarClientes() {
+async function cargarClientes({
+    reiniciar = true
+} = {}) {
+
+    if (cargandoClientes) {
+        return;
+    }
 
     const container =
         document.getElementById("clientsList");
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
-    container.innerHTML =
-        "<p>Cargando clientes...</p>";
+    cargandoClientes = true;
 
-    const { data, error } =
-        await supabaseClient
+    if (reiniciar) {
+
+        paginaClientes = 0;
+        hayMasClientes = true;
+        clientes = [];
+
+        container.innerHTML = `
+            <div class="loading-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <span>Cargando clientes...</span>
+            </div>
+        `;
+    }
+
+    actualizarBotonCargarMas();
+
+    const desde =
+        paginaClientes * CLIENTES_POR_PAGINA;
+
+    const hasta =
+        desde + CLIENTES_POR_PAGINA - 1;
+
+    let consulta =
+        supabaseClient
             .from("ccp_v_saldos_clientes")
             .select("*")
             .order("saldo", {
                 ascending: false
             });
 
+    if (busquedaClientes) {
+
+        const texto =
+            busquedaClientes
+                .replace(/[%_,()]/g, " ")
+                .trim();
+
+        if (texto) {
+            consulta = consulta.or(
+                `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
+            );
+        }
+    }
+
+    const { data, error } =
+        await consulta.range(desde, hasta);
+
+    cargandoClientes = false;
+
     if (error) {
 
-        console.error(error);
+        console.error(
+            "Error cargando clientes:",
+            error
+        );
 
-        container.innerHTML =
-            "<p>Error al cargar clientes</p>";
+        if (reiniciar) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    No se pudieron cargar los clientes
+                </div>
+            `;
+        }
+
+        actualizarBotonCargarMas();
 
         return;
     }
-    clientes = data || [];
-    console.log("Clientes:", clientes);
+
+    const nuevosClientes =
+        data || [];
+
+    if (reiniciar) {
+        clientes = nuevosClientes;
+    }
+    else {
+        clientes = [
+            ...clientes,
+            ...nuevosClientes
+        ];
+    }
+
+    hayMasClientes =
+        nuevosClientes.length === CLIENTES_POR_PAGINA;
+
+    if (nuevosClientes.length > 0) {
+        paginaClientes++;
+    }
+
     renderClientes();
+
+    actualizarBotonCargarMas();
+}
+
+async function cargarMasClientes() {
+
+    if (
+        cargandoClientes ||
+        !hayMasClientes
+    ) {
+        return;
+    }
+
+    await cargarClientes({
+        reiniciar: false
+    });
+}
+
+function actualizarBotonCargarMas() {
+
+    const boton =
+        document.getElementById("loadMoreClients");
+
+    if (!boton) {
+        return;
+    }
+
+    if (!hayMasClientes) {
+        boton.classList.add("hidden");
+        return;
+    }
+
+    boton.classList.remove("hidden");
+
+    boton.disabled = cargandoClientes;
+
+    boton.innerHTML = cargandoClientes
+        ? `
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            Cargando...
+        `
+        : `
+            <i class="fa-solid fa-chevron-down"></i>
+            Cargar más clientes
+        `;
 }
 
 function renderClientes() {
+
     const container =
         document.getElementById("clientsList");
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
     container.innerHTML = "";
 
-    if (clientes.length === 0) {
-
+    if (
+        clientes.length === 0 &&
+        !cargandoClientes
+    ) {
         container.innerHTML = `
             <div class="empty-state">
                 No hay clientes registrados
             </div>
         `;
-
-        actualizarResumen();
 
         return;
     }
@@ -180,73 +304,113 @@ function renderClientes() {
         else if (Number(cliente.saldo) > 100) {
             color = "orange";
         }
+
         container.innerHTML += `
-        <div class="client-card">
-            <div class="client-left">
-                <div class="client-name">
-                    ${cliente.nombre}
+            <div class="client-card">
+
+                <div class="client-left">
+
+                    <div class="client-name">
+                        ${cliente.nombre}
+                    </div>
+
+                    <div class="client-last">
+                        ${cliente.departamento || "Sin departamento"}
+                    </div>
+
                 </div>
-                <div class="client-last">
-                    ${cliente.departamento || "Sin departamento"}
+
+                <div class="client-right">
+
+                    <div class="client-balance ${color}">
+                        $${Number(cliente.saldo).toFixed(2)}
+                    </div>
+
+                    <div style="display:flex;gap:8px;">
+
+                        <button
+                            class="notify-btn"
+                            onclick="verHistorial(${cliente.id})"
+                            title="Ver historial"
+                        >
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </button>
+
+                        <button
+                            class="notify-btn"
+                            onclick="editarCliente(${cliente.id})"
+                            title="Editar cliente"
+                        >
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+
+                        <button
+                            class="notify-btn"
+                            onclick="desactivarCliente(${cliente.id})"
+                            title="Dar de baja"
+                        >
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </button>
+
+                        ${
+                            cliente.telefono
+                                ? `
+                                    <button
+                                        class="notify-btn"
+                                        onclick="notificar(${cliente.id})"
+                                        title="WhatsApp"
+                                    >
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
                 </div>
+
             </div>
-            <div class="client-right">
-    <div class="client-balance ${color}">
-        $${Number(cliente.saldo).toFixed(2)}
-    </div>
-
-  <div style="display:flex; gap:8px;">
-
-    <button
-        class="notify-btn"
-        onclick="verHistorial(${cliente.id})"
-        title="Ver historial"
-    >
-        <i class="fa-solid fa-clock-rotate-left"></i>
-    </button>
-
-    <button
-        class="notify-btn"
-        onclick="editarCliente(${cliente.id})"
-        title="Editar cliente"
-    >
-        <i class="fa-solid fa-pen-to-square"></i>
-    </button>
-
-    <button
-        class="notify-btn"
-        onclick="desactivarCliente(${cliente.id})"
-        title="Dar de baja"
-    >
-        <i class="fa-solid fa-user-xmark"></i>
-    </button>
-
-    ${
-        cliente.telefono
-        ?
-        `
-        <button
-            class="notify-btn"
-            onclick="notificar(${cliente.id})"
-            title="WhatsApp"
-        >
-            <i class="fa-brands fa-whatsapp"></i>
-        </button>
-        `
-        :
-        ""
-    }
-
-</div>
-        </div>
         `;
     });
-
-    actualizarResumen();
 }
 
-/* VISTA X CLIENTE*/
+async function cargarResumen() {
 
+    const { data, error } =
+        await supabaseClient
+            .rpc("get_ccp_resumen");
+
+    if (error) {
+        console.error(
+            "Error cargando resumen:",
+            error
+        );
+
+        return;
+    }
+
+    const resumen = data?.[0];
+
+    if (!resumen) {
+        return;
+    }
+
+    document
+        .getElementById("totalAdeudo")
+        .textContent =
+        `$${Number(resumen.total_adeudo).toFixed(2)}`;
+
+    document
+        .getElementById("totalClientes")
+        .textContent =
+        Number(resumen.total_clientes);
+
+    document
+        .getElementById("clientesPendientes")
+        .textContent =
+        Number(resumen.clientes_pendientes);
+}
 function iniciarVista(){
 
     const usuario =
@@ -270,6 +434,7 @@ function iniciarVista(){
         document.querySelector(".search-box").style.display = "";
         document.querySelector(".quick-actions").style.display = "";
 
+        cargarResumen();
         cargarClientes();
         return;
     }
@@ -351,48 +516,6 @@ async function cargarVistaUsuario(clienteId){
     `;
 }
 
-/* DASHBOARD */
-
-function actualizarResumen() {
-
-    const totalAdeudo =
-        clientes.reduce(
-            (total, cliente) =>
-                total + Number(cliente.saldo),
-            0
-        );
-
-    const clientesPendientes =
-        clientes.filter(
-            c => Number(c.saldo) > 0
-        ).length;
-
-    const totalElement =
-        document.getElementById("totalAdeudo");
-
-    const pendientesElement =
-        document.getElementById("clientesPendientes");
-
-    const clientesElement =
-        document.getElementById("totalClientes");
-
-    if (totalElement) {
-        totalElement.textContent =
-            `$${totalAdeudo.toFixed(2)}`;
-    }
-
-    if (pendientesElement) {
-        pendientesElement.textContent =
-            clientesPendientes;
-    }
-
-    if (clientesElement) {
-        clientesElement.textContent =
-            clientes.length;
-    }
-}
-
-/* WHATSAPP */
 
 function notificar(id) {
 
@@ -417,30 +540,28 @@ Gracias ☕`;
     );
 }
 
-/* BUSCADOR */
 
-document.addEventListener("input", e => {
+document.addEventListener("input", event => {
 
-    if (e.target.id !== "searchClient")
+    if (event.target.id !== "searchClient") {
         return;
+    }
+
+    clearTimeout(temporizadorBusqueda);
 
     const texto =
-        e.target.value.toLowerCase();
+        event.target.value.trim();
 
-    document
-        .querySelectorAll(".client-card")
-        .forEach(card => {
+    temporizadorBusqueda = setTimeout(() => {
 
-            const nombre =
-                card.querySelector(".client-name")
-                .textContent
-                .toLowerCase();
+        busquedaClientes = texto;
 
-            card.style.display =
-                nombre.includes(texto)
-                ? "flex"
-                : "none";
+        cargarClientes({
+            reiniciar: true
         });
+
+    }, 300);
+
 });
 
 function abrirModal() {
@@ -531,11 +652,9 @@ function nuevoCliente() {
             >
                 Guardar Cliente
             </button>
-
         </div>
 
     `;
-
     abrirModal();
 }
 
@@ -557,135 +676,266 @@ async function nuevoConsumo() {
         return;
     }
 
-    const clientesOrdenados = [...clientes].sort((a, b) =>
-        (a.nombre || "").localeCompare(
-            b.nombre || "",
-            "es",
-            {
-                sensitivity: "base"
-            }
-        )
-    );
-
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Consumo";
 
     document.getElementById("modalBody")
         .innerHTML = `
-        <div class="modal-body">
+            <div class="modal-body">
 
-                <input
-    type="text"
-    id="buscarClienteConsumo"
-    placeholder="Buscar cliente por nombre..."
-    autocomplete="off"
->
+                <div class="client-picker">
 
-<select id="consumoCliente">
-    <option value="">Selecciona un cliente</option>
+                    <div class="client-search-control">
+                        <i class="fa-solid fa-magnifying-glass"></i>
 
-    ${clientesOrdenados.map(c => `
-        <option value="${c.id}">
-            ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
-        </option>
-    `).join("")}
-</select>
+                        <input
+                            type="text"
+                            id="buscarClienteConsumo"
+                            placeholder="Buscar cliente..."
+                            autocomplete="off"
+                        >
 
-            <select id="consumoPiso">
-                <option value="23">
-                    Piso 23
-                </option>
+                        <i
+                            id="loadingClienteConsumo"
+                            class="fa-solid fa-circle-notch fa-spin hidden"
+                        ></i>
+                    </div>
 
-                <option value="26">
-                    Piso 26
-                </option>
-            </select>
-
-            <select
-                id="consumoProducto"
-                multiple
-                size="8"
-            >
-                ${(productos || []).map(p => `
-                    <option
-                        value="${p.id}"
-                        data-precio="${p.precio}"
-                        data-nombre="${p.nombre}"
+                    <input
+                        type="hidden"
+                        id="consumoCliente"
                     >
-                        ${p.nombre} - $${Number(p.precio).toFixed(2)}
+
+                    <div
+                        id="clienteSeleccionadoConsumo"
+                        class="selected-client hidden"
+                    ></div>
+
+                    <div
+                        id="resultadosClienteConsumo"
+                        class="client-search-results hidden"
+                    ></div>
+
+                </div>
+
+                <select id="consumoPiso">
+                    <option value="23">
+                        Piso 23
                     </option>
-                `).join("")}
-            </select>
 
-            <button
-                class="save-btn"
-                onclick="guardarConsumo()"
-            >
-                Guardar Consumo
-            </button>
+                    <option value="26">
+                        Piso 26
+                    </option>
+                </select>
 
-        </div>
-    `;
+                <select
+                    id="consumoProducto"
+                    multiple
+                    size="8"
+                >
+                    ${(productos || []).map(producto => `
+                        <option
+                            value="${producto.id}"
+                            data-precio="${producto.precio}"
+                            data-nombre="${producto.nombre}"
+                        >
+                            ${producto.nombre} - $${Number(producto.precio).toFixed(2)}
+                        </option>
+                    `).join("")}
+                </select>
+
+                <button
+                    class="save-btn"
+                    onclick="guardarConsumo()"
+                >
+                    Guardar Consumo
+                </button>
+
+            </div>
+        `;
 
     abrirModal();
 
-    const buscador =
+    configurarBuscadorClienteConsumo();
+
+    document
+        .getElementById("buscarClienteConsumo")
+        .focus();
+}
+
+function configurarBuscadorClienteConsumo() {
+
+    const input =
         document.getElementById("buscarClienteConsumo");
 
-    const selectCliente =
-        document.getElementById("consumoCliente");
+    const resultados =
+        document.getElementById("resultadosClienteConsumo");
 
-function filtrarClientes() {
+    const loading =
+        document.getElementById("loadingClienteConsumo");
 
-    const texto = buscador.value
-        .trim()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+    let temporizador = null;
 
-    const filtrados = clientesOrdenados.filter(cliente => {
+    input.addEventListener("input", () => {
 
-        const nombre = `${cliente.nombre || ""} ${cliente.departamento || ""}`
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
+        clearTimeout(temporizador);
 
-        return nombre.includes(texto);
-    });
+        const texto =
+            input.value.trim();
 
-    selectCliente.innerHTML = `
-        <option value="">
-            ${
-                filtrados.length
-                    ? "Selecciona un cliente"
-                    : "No se encontraron clientes"
+        document.getElementById("consumoCliente").value = "";
+
+        document
+            .getElementById("clienteSeleccionadoConsumo")
+            .classList.add("hidden");
+
+        if (texto.length < 2) {
+
+            resultados.innerHTML = "";
+
+            resultados.classList.add("hidden");
+
+            return;
+        }
+
+        temporizador = setTimeout(async () => {
+
+            loading.classList.remove("hidden");
+
+            const textoSeguro =
+                texto.replace(/[%_,()]/g, " ");
+
+            const { data, error } =
+                await supabaseClient
+                    .from("ccp_v_saldos_clientes")
+                    .select("id,nombre,departamento,telefono,saldo")
+                    .or(
+                        `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
+                    )
+                    .order("nombre", {
+                        ascending: true
+                    })
+                    .limit(15);
+
+            loading.classList.add("hidden");
+
+            if (error) {
+
+                console.error(error);
+
+                resultados.innerHTML = `
+                    <div class="client-result-empty">
+                        No se pudieron buscar clientes
+                    </div>
+                `;
+
+                resultados.classList.remove("hidden");
+
+                return;
             }
-        </option>
 
-        ${filtrados.map(c => `
-            <option value="${c.id}">
-                ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
-            </option>
-        `).join("")}
-    `;
+            mostrarResultadosClienteConsumo(data || []);
+
+        }, 300);
+    });
 }
 
-buscador.addEventListener("input", filtrarClientes);
+function mostrarResultadosClienteConsumo(clientesEncontrados) {
 
-buscador.addEventListener("keydown", event => {
+    const resultados =
+        document.getElementById("resultadosClienteConsumo");
 
-    if (
-        event.key === "ArrowDown" &&
-        selectCliente.options.length > 1
-    ) {
-        event.preventDefault();
-        selectCliente.focus();
-        selectCliente.selectedIndex = 1;
+    if (!clientesEncontrados.length) {
+
+        resultados.innerHTML = `
+            <div class="client-result-empty">
+                No se encontraron clientes
+            </div>
+        `;
+
+        resultados.classList.remove("hidden");
+
+        return;
     }
-});
 
-buscador.focus();
+    resultados.innerHTML =
+        clientesEncontrados.map(cliente => `
+
+            <button
+                type="button"
+                class="client-result-item"
+                onclick='seleccionarClienteConsumo(${JSON.stringify(cliente)})'
+            >
+                <span class="client-result-icon">
+                    <i class="fa-solid fa-user"></i>
+                </span>
+
+                <span class="client-result-info">
+
+                    <strong>
+                        ${cliente.nombre}
+                    </strong>
+
+                    <small>
+                        ${cliente.departamento || "Sin departamento"}
+                    </small>
+
+                </span>
+
+                <span class="client-result-balance">
+                    $${Number(cliente.saldo).toFixed(2)}
+                </span>
+
+            </button>
+
+        `).join("");
+
+    resultados.classList.remove("hidden");
 }
+
+function seleccionarClienteConsumo(cliente) {
+
+    document
+        .getElementById("consumoCliente")
+        .value = cliente.id;
+
+    document
+        .getElementById("buscarClienteConsumo")
+        .value = "";
+
+    document
+        .getElementById("resultadosClienteConsumo")
+        .classList.add("hidden");
+
+    const seleccionado =
+        document.getElementById("clienteSeleccionadoConsumo");
+
+    seleccionado.innerHTML = `
+        <div>
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+                <strong>${cliente.nombre}</strong>
+
+                <small>
+                    ${cliente.departamento || "Sin departamento"}
+                    · Saldo $${Number(cliente.saldo).toFixed(2)}
+                </small>
+            </span>
+        </div>
+
+        <button
+            type="button"
+            onclick="quitarClienteConsumo()"
+            title="Cambiar cliente"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    `;
+
+    seleccionado.classList.remove("hidden");
+}
+
 async function guardarConsumo() {
 
     
@@ -738,7 +988,6 @@ async function guardarConsumo() {
     );
 
     cerrarModal();
-
     cargarClientes();
 }
 
