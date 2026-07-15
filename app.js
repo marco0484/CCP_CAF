@@ -542,11 +542,30 @@ function nuevoCliente() {
 
 async function nuevoConsumo() {
 
-    const { data: productos } =
+    const { data: productos, error } =
         await supabaseClient
             .from("ccp_productos")
             .select("*")
-            .eq("activo", true);
+            .eq("activo", true)
+            .order("nombre", {
+                ascending: true
+            });
+
+    if (error) {
+        console.error(error);
+        alert("No se pudieron cargar los productos");
+        return;
+    }
+
+    const clientesOrdenados = [...clientes].sort((a, b) =>
+        (a.nombre || "").localeCompare(
+            b.nombre || "",
+            "es",
+            {
+                sensitivity: "base"
+            }
+        )
+    );
 
     document.getElementById("modalTitle")
         .innerHTML = "Registrar Consumo";
@@ -554,54 +573,125 @@ async function nuevoConsumo() {
     document.getElementById("modalBody")
         .innerHTML = `
         <div class="modal-body">
-            <select id="consumoCliente">
-                ${clientes.map(c => `
+
+            <input
+                type="text"
+                id="buscarClienteConsumo"
+                placeholder="Buscar cliente por nombre..."
+                autocomplete="off"
+            >
+
+            <select
+                id="consumoCliente"
+                size="7"
+            >
+                ${clientesOrdenados.map(c => `
                     <option value="${c.id}">
-                        ${c.nombre}
+                        ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
                     </option>
                 `).join("")}
             </select>
-           <select id="consumoPiso">
-    <option value="23">
-        Piso 23
-    </option>
 
-    <option value="26">
-        Piso 26
-    </option>
+            <select id="consumoPiso">
+                <option value="23">
+                    Piso 23
+                </option>
 
-</select>
+                <option value="26">
+                    Piso 26
+                </option>
+            </select>
+
             <select
                 id="consumoProducto"
                 multiple
                 size="8"
             >
-                ${productos.map(p => `
+                ${(productos || []).map(p => `
                     <option
                         value="${p.id}"
                         data-precio="${p.precio}"
                         data-nombre="${p.nombre}"
                     >
-                        ${p.nombre} - $${p.precio}
+                        ${p.nombre} - $${Number(p.precio).toFixed(2)}
                     </option>
                 `).join("")}
             </select>
+
             <button
                 class="save-btn"
                 onclick="guardarConsumo()"
             >
                 Guardar Consumo
             </button>
+
         </div>
     `;
 
     abrirModal();
+
+    const buscador =
+        document.getElementById("buscarClienteConsumo");
+
+    const selectCliente =
+        document.getElementById("consumoCliente");
+
+    function filtrarClientes() {
+
+        const texto = buscador.value
+            .trim()
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        const filtrados = clientesOrdenados.filter(cliente => {
+
+            const nombre = `${cliente.nombre || ""} ${cliente.departamento || ""}`
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+
+            return nombre.includes(texto);
+        });
+
+        selectCliente.innerHTML = filtrados.map(c => `
+            <option value="${c.id}">
+                ${c.nombre}${c.departamento ? ` · ${c.departamento}` : ""}
+            </option>
+        `).join("");
+
+        if (filtrados.length === 1) {
+            selectCliente.selectedIndex = 0;
+        }
+    }
+
+    buscador.addEventListener("input", filtrarClientes);
+
+    buscador.addEventListener("keydown", event => {
+
+        if (
+            event.key === "ArrowDown" &&
+            selectCliente.options.length > 0
+        ) {
+            event.preventDefault();
+            selectCliente.focus();
+            selectCliente.selectedIndex = 0;
+        }
+    });
+
+    buscador.focus();
 }
 
 async function guardarConsumo() {
 
+    
     const clienteId =
         document.getElementById("consumoCliente").value;
+
+        if (!clienteId) {
+    alert("Busca y selecciona un cliente");
+    return;
+}
 
     const pisoId =
         document.getElementById("consumoPiso").value;
