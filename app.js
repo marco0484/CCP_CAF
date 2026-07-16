@@ -128,22 +128,22 @@ async function cargarClientes({
         document.getElementById("clientsList");
 
     const tituloClientes =
-    document.getElementById("tituloClientes");
+        document.getElementById("tituloClientes");
 
-if (tituloClientes) {
-    tituloClientes.textContent =
-        busquedaClientes
-            ? "Resultados de búsqueda"
-            : "Adeudos Activos";
-}
     if (!container) {
         return;
+    }
+
+    if (tituloClientes) {
+        tituloClientes.textContent =
+            busquedaClientes
+                ? "Resultados de búsqueda"
+                : "Adeudos Activos";
     }
 
     cargandoClientes = true;
 
     if (reiniciar) {
-
         paginaClientes = 0;
         hayMasClientes = true;
         clientes = [];
@@ -164,44 +164,130 @@ if (tituloClientes) {
     const hasta =
         desde + CLIENTES_POR_PAGINA - 1;
 
-    let consulta =
-    supabaseClient
-        .from("ccp_v_saldos_clientes")
-        .select("*");
+    let nuevosClientes = [];
+    let errorConsulta = null;
 
-if (busquedaClientes) {
-    const texto =
-        busquedaClientes
-            .replace(/[%_,()]/g, " ")
-            .trim();
+    /*
+     * SIN BÚSQUEDA:
+     * La pantalla principal consulta únicamente
+     * la vista de clientes con adeudo.
+     */
+    if (!busquedaClientes) {
 
-    consulta = consulta
-        .or(
-            `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
-        )
-        .order("nombre", {
-            ascending: true
-        });
+        const { data, error } =
+            await supabaseClient
+                .from("ccp_v_saldos_clientes")
+                .select(`
+                    id,
+                    nombre,
+                    telefono,
+                    departamento,
+                    saldo
+                `)
+                .order("saldo", {
+                    ascending: false
+                })
+                .range(desde, hasta);
 
-} else {
+        nuevosClientes = data || [];
+        errorConsulta = error;
+    }
 
-    consulta = consulta
-        .gt("saldo", 0)
-        .order("saldo", {
-            ascending: false
-        });
-}
+    /*
+     * CON BÚSQUEDA:
+     * Busca directamente en todos los clientes,
+     * incluyendo quienes no tienen adeudo.
+     */
+    else {
 
-    const { data, error } =
-        await consulta.range(desde, hasta);
+        const texto =
+            busquedaClientes
+                .replace(/[%_,()]/g, " ")
+                .trim();
+
+        const {
+            data: clientesEncontrados,
+            error: errorClientes
+        } =
+            await supabaseClient
+                .from("ccp_clientes")
+                .select(`
+                    id,
+                    nombre,
+                    telefono,
+                    departamento
+                `)
+                .eq("activo", true)
+                .or(
+                    `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
+                )
+                .order("nombre", {
+                    ascending: true
+                })
+                .range(desde, hasta);
+
+        if (errorClientes) {
+            errorConsulta = errorClientes;
+        }
+        else {
+
+            const encontrados =
+                clientesEncontrados || [];
+
+            const ids =
+                encontrados.map(cliente => cliente.id);
+
+            let saldosPorCliente = {};
+
+            /*
+             * Solo calcula/consulta el saldo de los
+             * clientes encontrados, no de todos.
+             */
+            if (ids.length > 0) {
+
+                const {
+                    data: saldos,
+                    error: errorSaldos
+                } =
+                    await supabaseClient
+                        .from("ccp_v_saldos_clientes")
+                        .select("id,saldo")
+                        .in("id", ids);
+
+                if (errorSaldos) {
+                    console.error(
+                        "Error consultando saldos:",
+                        errorSaldos
+                    );
+                }
+
+                saldosPorCliente =
+                    Object.fromEntries(
+                        (saldos || []).map(cliente => [
+                            String(cliente.id),
+                            Number(cliente.saldo) || 0
+                        ])
+                    );
+            }
+
+            nuevosClientes =
+                encontrados.map(cliente => ({
+                    ...cliente,
+                    saldo:
+                        saldosPorCliente[
+                            String(cliente.id)
+                        ] || 0
+                }));
+        }
+    }
 
     cargandoClientes = false;
 
-    if (error) {
+    if (errorConsulta) {
 
         console.error(
             "Error cargando clientes:",
-            error
+            errorConsulta
         );
 
         if (reiniciar) {
@@ -213,12 +299,8 @@ if (busquedaClientes) {
         }
 
         actualizarBotonCargarMas();
-
         return;
     }
-
-    const nuevosClientes =
-        data || [];
 
     if (reiniciar) {
         clientes = nuevosClientes;
@@ -238,7 +320,6 @@ if (busquedaClientes) {
     }
 
     renderClientes();
-
     actualizarBotonCargarMas();
 }
 
@@ -466,12 +547,50 @@ async function cargarVistaUsuario(clienteId){
     document.querySelector(".search-box").style.display="none";
     document.querySelector(".quick-actions").style.display="none";
 
-    const { data:cliente,error:errorCliente }=
-        await supabaseClient
-            .from("ccp_v_saldos_clientes")
-            .select("*")
-            .eq("id",clienteId)
-            .single();
+  const {
+    data: datosCliente,
+    error: errorCliente
+} =
+    await supabaseClient
+        .from("ccp_clientes")
+        .select(`
+            id,
+            nombre,
+            telefono,
+            departamento
+        `)
+        .eq("id", clienteId)
+        .single();
+
+if (errorCliente || !datosCliente) {
+    alert(
+        errorCliente?.message ||
+        "No se encontró el cliente"
+    );
+    return;
+}
+
+const {
+    data: datosSaldo,
+    error: errorSaldo
+} =
+    await supabaseClient
+        .from("ccp_v_saldos_clientes")
+        .select("saldo")
+        .eq("id", clienteId)
+        .maybeSingle();
+
+if (errorSaldo) {
+    console.error(
+        "Error consultando saldo:",
+        errorSaldo
+    );
+}
+
+const cliente = {
+    ...datosCliente,
+    saldo: Number(datosSaldo?.saldo) || 0
+};
 
     if(errorCliente){
         alert(errorCliente.message);
@@ -930,39 +1049,92 @@ function configurarBuscadorClienteConsumo() {
             const textoSeguro =
                 texto.replace(/[%_,()]/g, " ");
 
-            const { data, error } =
-                await supabaseClient
-                    .from("ccp_v_saldos_clientes")
-                    .select("id,nombre,departamento,telefono,saldo")
-                    .or(
-                        `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
-                    )
-                    .order("nombre", {
-                        ascending: true
-                    })
-                    .limit(15);
+           const {
+    data: clientesEncontrados,
+    error
+} =
+    await supabaseClient
+        .from("ccp_clientes")
+        .select(`
+            id,
+            nombre,
+            departamento,
+            telefono
+        `)
+        .eq("activo", true)
+        .or(
+            `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
+        )
+        .order("nombre", {
+            ascending: true
+        })
+        .limit(15);
 
-            loading.classList.add("hidden");
+let data = clientesEncontrados || [];
 
-            if (error) {
+if (!error && data.length > 0) {
 
-                console.error(error);
+    const ids =
+        data.map(cliente => cliente.id);
 
-                resultados.innerHTML = `
-                    <div class="client-result-empty">
-                        No se pudieron buscar clientes
-                    </div>
-                `;
+    const {
+        data: saldos,
+        error: errorSaldos
+    } =
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select("id,saldo")
+            .in("id", ids);
 
-                resultados.classList.remove("hidden");
+    if (errorSaldos) {
+        console.error(
+            "Error consultando saldos:",
+            errorSaldos
+        );
+    }
 
-                return;
-            }
+    const saldosPorCliente =
+        Object.fromEntries(
+            (saldos || []).map(cliente => [
+                String(cliente.id),
+                Number(cliente.saldo) || 0
+            ])
+        );
 
-            mostrarResultadosClienteConsumo(data || []);
+    data = data.map(cliente => ({
+        ...cliente,
+        saldo:
+            saldosPorCliente[
+                String(cliente.id)
+            ] || 0
+    }));
+}
 
-        }, 300);
-    });
+loading.classList.add("hidden");
+
+if (error) {
+
+    console.error(
+        "Error buscando clientes:",
+        error
+    );
+
+    resultados.innerHTML = `
+        <div class="client-result-empty">
+            No se pudieron buscar clientes
+        </div>
+    `;
+
+    resultados.classList.remove("hidden");
+
+    return;
+}
+
+mostrarResultadosClienteConsumo(data);
+
+}, 300);
+
+});
 }
 
 function mostrarResultadosClienteConsumo(clientesEncontrados) {
