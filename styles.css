@@ -1,19 +1,15 @@
-
 :root{
     --primary:#1f2937;
     --secondary:#374151;
     --accent:#b68d40;
     --success:#15803d;
     --danger:#dc2626;
-
     --bg:#f3f5f7;
     --card:#ffffff;
     --white:#ffffff;
-
     --text:#111827;
     --muted:#6b7280;
     --border:#e5e7eb;
-
     --radius:18px;
     --shadow:0 10px 30px rgba(15,23,42,.08);
     --shadow-lg:0 20px 60px rgba(15,23,42,.12);
@@ -37,26 +33,9 @@ body{
     line-height:1.5;
 }
 
-body::before{
-content:"";
-position:fixed;
-inset:0;
-background:url(images/Cuidado-con-el-perro-Simbolo_White.webp);
-background-size:450px;
-background-repeat:no-repeat;
-background-position:center;
-opacity:.025;
-pointer-events:none;
-z-index:-1;
-
-}
-
-
 .hidden{
     display:none!important;
 }
-
-/* LOGIN */
 
 .login-card button,
 .save-btn{
@@ -142,7 +121,6 @@ button{
     transform:translateY(-1px);
 }
 
-/* APP */
 
 #appScreen{
     max-width:1400px;
@@ -154,15 +132,10 @@ header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-
     padding:20px 32px;
-
     background:#fff;
-
     border-bottom:1px solid var(--border);
-
     box-shadow:var(--shadow);
-
     margin-bottom:20px;
 }
 
@@ -217,15 +190,10 @@ header{
 .logout-btn{
     width:54px;
     height:54px;
-
     border:none;
-
     border-radius:18px;
-
     background:#f5f5f7;
-
     box-shadow:0 4px 12px rgba(0,0,0,.05);
-
     transition:.25s;
 }
 
@@ -374,7 +342,6 @@ header{
 .orange{color:#d97706;}
 .green{color:var(--success);}
 
-/* MODAL */
 
 .modal{
     position:fixed;
@@ -459,7 +426,6 @@ header{
     opacity:.9;
 }
 
-/* ===== LOGOS ===== */
 
 .login-brands img{
     display:block;
@@ -472,8 +438,6 @@ header{
     opacity:1;
     transform:scale(1.05);
 }
-
-/* tamaños individuales */
 
 .login-brands{
     display:flex;
@@ -499,8 +463,6 @@ header{
     height:42px;
 }
 
-/* ===== TITULO ===== */
-
 .login-card h1{
     text-align:center;
     font-size:2rem;
@@ -515,9 +477,6 @@ header{
     font-size:.95rem;
     margin-bottom:28px;
 }
-
-
-/* ===== SOPORTE ===== */
 
 .support-footer{
     margin-top:22px;
@@ -553,19 +512,13 @@ header{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-
     background:#25D366;
     color:#fff;
     text-decoration:none;
-
     font-weight:600;
-
     padding:8px 14px;
-
     font-size:.82rem;
-
     border-radius:10px;
-
     transition:.25s;
 }
 
@@ -573,7 +526,6 @@ header{
     transform:translateY(-2px);
     box-shadow:0 8px 20px rgba(37,211,102,.25);
 }
-
 
 .logged-user{
     display:flex;
@@ -587,7 +539,6 @@ header{
 .logged-user i{
     font-size:1.1rem;
 }
-
 
 .loading-state{
     min-height:140px;
@@ -640,7 +591,6 @@ header{
     transform:none;
 }
 
-
 .client-picker{
     position:relative;
 }
@@ -683,14 +633,11 @@ header{
     left:0;
     right:0;
     z-index:30;
-
     max-height:320px;
     overflow-y:auto;
-
     background:#fff;
     border:1px solid var(--border);
     border-radius:16px;
-
     box-shadow:0 18px 45px rgba(15,23,42,.16);
 }
 
@@ -699,12 +646,9 @@ header{
     display:flex;
     align-items:center;
     gap:12px;
-
     padding:13px 14px;
-
     background:#fff;
     border-bottom:1px solid #f1f3f5;
-
     text-align:left;
 }
 
@@ -720,12 +664,9 @@ header{
     width:38px;
     height:38px;
     flex-shrink:0;
-
     display:grid;
     place-items:center;
-
     border-radius:12px;
-
     background:#f3f4f6;
     color:var(--accent);
 }
@@ -928,9 +869,6 @@ header{
 }
 
 @media (max-width:640px){
-
-    /* LOGIN */
-
     .login-card{
         padding:24px;
         border-radius:22px;
@@ -965,8 +903,6 @@ header{
         font-size:.85rem;
         margin-bottom:22px;
     }
-
-    /* HEADER */
 
     header{
         padding:18px;
@@ -1016,8 +952,6 @@ header{
         height:46px;
     }
 
-    /* DASHBOARD */
-
     .stats-grid{
         grid-template-columns:1fr;
         padding:16px;
@@ -1051,8 +985,6 @@ header{
         justify-content:space-between;
     }
 
-    /* SOPORTE */
-
     .support-footer{
         flex-direction:column;
         align-items:center;
@@ -1075,8 +1007,6 @@ header{
         width:100%;
         text-align:center;
     }
-
-    /* MODAL */
 
     .modal-content{
         padding:20px;
