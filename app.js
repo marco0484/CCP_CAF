@@ -127,6 +127,15 @@ async function cargarClientes({
     const container =
         document.getElementById("clientsList");
 
+    const tituloClientes =
+    document.getElementById("tituloClientes");
+
+if (tituloClientes) {
+    tituloClientes.textContent =
+        busquedaClientes
+            ? "Resultados de búsqueda"
+            : "Adeudos Activos";
+}
     if (!container) {
         return;
     }
@@ -156,27 +165,32 @@ async function cargarClientes({
         desde + CLIENTES_POR_PAGINA - 1;
 
     let consulta =
-        supabaseClient
-            .from("ccp_v_saldos_clientes")
-            .select("*")
-            .gt("saldo", 0)
-            .order("saldo", {
-                ascending: false
-            });
+    supabaseClient
+        .from("ccp_v_saldos_clientes")
+        .select("*");
 
-    if (busquedaClientes) {
+if (busquedaClientes) {
+    const texto =
+        busquedaClientes
+            .replace(/[%_,()]/g, " ")
+            .trim();
 
-        const texto =
-            busquedaClientes
-                .replace(/[%_,()]/g, " ")
-                .trim();
+    consulta = consulta
+        .or(
+            `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
+        )
+        .order("nombre", {
+            ascending: true
+        });
 
-        if (texto) {
-            consulta = consulta.or(
-                `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
-            );
-        }
-    }
+} else {
+
+    consulta = consulta
+        .gt("saldo", 0)
+        .order("saldo", {
+            ascending: false
+        });
+}
 
     const { data, error } =
         await consulta.range(desde, hasta);
@@ -324,7 +338,11 @@ function renderClientes() {
                 <div class="client-right">
 
                     <div class="client-balance ${color}">
-                        $${Number(cliente.saldo).toFixed(2)}
+                        ${
+                            Number(cliente.saldo) > 0
+                                ? `$${Number(cliente.saldo).toFixed(2)}`
+                                : "Sin adeudo"
+                        }
                     </div>
 
                     <div style="display:flex;gap:8px;">
@@ -2035,9 +2053,7 @@ async function cancelarMovimiento(id){
     }
 
     alert("Movimiento cancelado");
-
     cerrarModal();
-
     cargarClientes();
 }
 
