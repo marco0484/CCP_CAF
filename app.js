@@ -1139,97 +1139,666 @@ async function nuevoPago() {
 
     document.getElementById("modalBody")
         .innerHTML = `
+            <div class="modal-body">
 
-        <div class="modal-body">
+                <div class="client-picker">
 
-            <select id="pagoCliente">
-                ${clientes.map(c => `
-                    <option value="${c.id}">
-                        ${c.nombre}
+                    <div class="client-search-control">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            id="buscarClientePago"
+                            type="text"
+                            placeholder="Buscar por nombre, teléfono o departamento..."
+                            autocomplete="off"
+                        >
+
+                        <i
+                            id="loadingClientePago"
+                            class="fa-solid fa-circle-notch fa-spin hidden"
+                        ></i>
+
+                    </div>
+
+                    <input
+                        type="hidden"
+                        id="pagoCliente"
+                    >
+
+                    <input
+                        type="hidden"
+                        id="pagoSaldo"
+                    >
+
+                    <div
+                        id="clienteSeleccionadoPago"
+                        class="selected-client hidden"
+                    ></div>
+
+                    <div
+                        id="resultadosClientePago"
+                        class="client-search-results hidden"
+                    ></div>
+
+                </div>
+
+                <div
+                    id="saldoClientePago"
+                    class="hidden"
+                    style="
+                        padding:18px;
+                        border:1px solid #e5e7eb;
+                        border-radius:14px;
+                        background:#f9fafb;
+                        text-align:center;
+                    "
+                ></div>
+
+                <select id="pagoPiso">
+
+                    <option value="23">
+                        Piso 23
                     </option>
-                `).join("")}
-            </select>
 
-<select id="pagoPiso">
-    <option value="23">
-        Piso 23
-    </option>
-    <option value="26">
-        Piso 26
-    </option>
-</select>
-            <input
-                id="pagoMonto"
-                type="number"
-                placeholder="Monto"
-            >
-            <button
-                class="save-btn"
-                onclick="guardarPago()"
-            >
-                Guardar Pago
-            </button>
-        </div>
-    `;
+                    <option value="26">
+                        Piso 26
+                    </option>
+
+                </select>
+
+                <input
+                    id="pagoMonto"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Monto a pagar"
+                    oninput="actualizarResumenPago()"
+                >
+
+                <div
+                    id="resumenPago"
+                    class="hidden"
+                    style="
+                        padding:14px;
+                        border-radius:12px;
+                        background:#f3f4f6;
+                        font-size:.9rem;
+                    "
+                ></div>
+
+                <button
+                    class="save-btn"
+                    onclick="guardarPago()"
+                >
+                    Guardar Pago
+                </button>
+
+            </div>
+        `;
+
     abrirModal();
+
+    configurarBuscadorClientePago();
+
+    document
+        .getElementById("buscarClientePago")
+        .focus();
 }
 
-async function guardarPago() {
+function configurarBuscadorClientePago() {
 
-const clienteId = document.getElementById("pagoCliente").value;
-const pisoId = document.getElementById("pagoPiso").value;
-const monto = Number(document.getElementById("pagoMonto").value);
+    const input =
+        document.getElementById("buscarClientePago");
 
-    if(!monto){
+    const resultados =
+        document.getElementById("resultadosClientePago");
 
-        alert("Ingresa un monto");
+    const loading =
+        document.getElementById("loadingClientePago");
+
+    let temporizador = null;
+
+    input.addEventListener("input", () => {
+
+        clearTimeout(temporizador);
+
+        const texto =
+            input.value.trim();
+
+        quitarClientePago(false);
+
+        if (texto.length < 2) {
+
+            resultados.innerHTML = "";
+
+            resultados.classList.add("hidden");
+
+            return;
+        }
+
+        temporizador = setTimeout(async () => {
+
+            loading.classList.remove("hidden");
+
+            const textoSeguro =
+                texto.replace(/[%_,()]/g, " ");
+
+            const { data, error } =
+                await supabaseClient
+                    .from("ccp_v_saldos_clientes")
+                    .select(
+                        "id,nombre,departamento,telefono,saldo"
+                    )
+                    .gt("saldo", 0)
+                    .or(
+                        `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
+                    )
+                    .order("nombre", {
+                        ascending: true
+                    })
+                    .limit(15);
+
+            loading.classList.add("hidden");
+
+            if (error) {
+
+                console.error(
+                    "Error buscando cliente:",
+                    error
+                );
+
+                resultados.innerHTML = `
+                    <div class="client-result-empty">
+                        No se pudieron buscar clientes
+                    </div>
+                `;
+
+                resultados.classList.remove("hidden");
+
+                return;
+            }
+
+            mostrarResultadosClientePago(data || []);
+
+        }, 300);
+    });
+}
+
+
+function mostrarResultadosClientePago(clientesEncontrados) {
+
+    const resultados =
+        document.getElementById("resultadosClientePago");
+
+    if (!clientesEncontrados.length) {
+
+        resultados.innerHTML = `
+            <div class="client-result-empty">
+                No se encontraron clientes con saldo pendiente
+            </div>
+        `;
+
+        resultados.classList.remove("hidden");
 
         return;
     }
 
-const cliente =
-    clientes.find(c => c.id == clienteId);
+    resultados.innerHTML =
+        clientesEncontrados.map(cliente => {
 
-if(!cliente){
+            const clienteSeguro =
+                encodeURIComponent(
+                    JSON.stringify(cliente)
+                );
 
-    alert("Cliente no encontrado");
+            return `
+                <button
+                    type="button"
+                    class="client-result-item"
+                    onclick="seleccionarClientePago(
+                        JSON.parse(
+                            decodeURIComponent('${clienteSeguro}')
+                        )
+                    )"
+                >
 
-    return;
+                    <span class="client-result-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+
+                    <span class="client-result-info">
+
+                        <strong>
+                            ${cliente.nombre}
+                        </strong>
+
+                        <small>
+                            ${cliente.departamento || "Sin departamento"}
+                        </small>
+
+                        ${
+                            cliente.telefono
+                                ? `
+                                    <small>
+                                        ${cliente.telefono}
+                                    </small>
+                                `
+                                : ""
+                        }
+
+                    </span>
+
+                    <span class="client-result-balance">
+                        $${Number(cliente.saldo).toFixed(2)}
+                    </span>
+
+                </button>
+            `;
+        }).join("");
+
+    resultados.classList.remove("hidden");
 }
 
-if(monto > Number(cliente.saldo)){
 
-    alert(
-        `Tu saldo pendiente actual es de $${Number(cliente.saldo).toFixed(2)}`
-    );
+function seleccionarClientePago(cliente) {
 
-    return;
+    const saldo =
+        Number(cliente.saldo);
+
+    document
+        .getElementById("pagoCliente")
+        .value = cliente.id;
+
+    document
+        .getElementById("pagoSaldo")
+        .value = saldo;
+
+    document
+        .getElementById("buscarClientePago")
+        .value = "";
+
+    document
+        .getElementById("resultadosClientePago")
+        .classList.add("hidden");
+
+    const seleccionado =
+        document.getElementById("clienteSeleccionadoPago");
+
+    seleccionado.innerHTML = `
+        <div>
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+
+                <strong>
+                    ${cliente.nombre}
+                </strong>
+
+                <small>
+                    ${cliente.departamento || "Sin departamento"}
+                </small>
+
+            </span>
+
+        </div>
+
+        <button
+            type="button"
+            onclick="quitarClientePago()"
+            title="Cambiar cliente"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    `;
+
+    seleccionado.classList.remove("hidden");
+
+    const saldoContainer =
+        document.getElementById("saldoClientePago");
+
+    saldoContainer.innerHTML = `
+        <div style="
+            color:#6b7280;
+            font-size:.85rem;
+            font-weight:600;
+        ">
+            Saldo pendiente
+        </div>
+
+        <div style="
+            margin:4px 0 14px;
+            font-size:2rem;
+            line-height:1;
+            font-weight:800;
+            color:#dc2626;
+        ">
+            $${saldo.toFixed(2)}
+        </div>
+
+        <button
+            type="button"
+            onclick="liquidarDeudaPago()"
+            style="
+                width:100%;
+                border:0;
+                border-radius:10px;
+                padding:11px 14px;
+                background:#111827;
+                color:#fff;
+                font-weight:700;
+                cursor:pointer;
+            "
+        >
+            <i class="fa-solid fa-money-bill-wave"></i>
+            Liquidar deuda completa
+        </button>
+    `;
+
+    saldoContainer.classList.remove("hidden");
+
+    const montoInput =
+        document.getElementById("pagoMonto");
+
+    montoInput.value = "";
+
+    montoInput.max =
+        saldo.toFixed(2);
+
+    montoInput.placeholder =
+        `Máximo $${saldo.toFixed(2)}`;
+
+    document
+        .getElementById("resumenPago")
+        .classList.add("hidden");
+
+    montoInput.focus();
 }
+
+
+function quitarClientePago(limpiarBusqueda = true) {
+
+    const pagoCliente =
+        document.getElementById("pagoCliente");
+
+    if (!pagoCliente) {
+        return;
+    }
+
+    pagoCliente.value = "";
+
+    document
+        .getElementById("pagoSaldo")
+        .value = "";
+
+    if (limpiarBusqueda) {
+
+        document
+            .getElementById("buscarClientePago")
+            .value = "";
+    }
+
+    document
+        .getElementById("clienteSeleccionadoPago")
+        .classList.add("hidden");
+
+    document
+        .getElementById("saldoClientePago")
+        .classList.add("hidden");
+
+    document
+        .getElementById("resumenPago")
+        .classList.add("hidden");
+
+    document
+        .getElementById("pagoMonto")
+        .value = "";
+}
+
+
+function liquidarDeudaPago() {
+
+    const saldo =
+        Number(
+            document.getElementById("pagoSaldo").value
+        );
+
+    if (!saldo) {
+        return;
+    }
+
+    document
+        .getElementById("pagoMonto")
+        .value = saldo.toFixed(2);
+
+    actualizarResumenPago();
+}
+
+
+function actualizarResumenPago() {
+
+    const saldo =
+        Number(
+            document.getElementById("pagoSaldo").value
+        );
+
+    const monto =
+        Number(
+            document.getElementById("pagoMonto").value
+        );
+
+    const resumen =
+        document.getElementById("resumenPago");
+
+    if (!saldo || !monto || monto <= 0) {
+
+        resumen.classList.add("hidden");
+
+        return;
+    }
+
+    const restante =
+        Math.max(0, saldo - monto);
+
+    resumen.innerHTML = `
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+            margin-bottom:6px;
+        ">
+            <span>Saldo actual</span>
+
+            <strong>
+                $${saldo.toFixed(2)}
+            </strong>
+        </div>
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+            margin-bottom:6px;
+        ">
+            <span>Pago</span>
+
+            <strong>
+                -$${monto.toFixed(2)}
+            </strong>
+        </div>
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+            padding-top:8px;
+            border-top:1px solid #d1d5db;
+        ">
+            <span>Saldo restante</span>
+
+            <strong style="
+                color:${restante === 0 ? "#059669" : "#dc2626"};
+            ">
+                $${restante.toFixed(2)}
+            </strong>
+        </div>
+    `;
+
+    resumen.classList.remove("hidden");
+}
+
+
+async function guardarPago() {
+
+    const clienteId =
+        document.getElementById("pagoCliente").value;
+
+    const pisoId =
+        document.getElementById("pagoPiso").value;
+
+    const monto =
+        Number(
+            document.getElementById("pagoMonto").value
+        );
+
+    if (!clienteId) {
+
+        alert("Busca y selecciona un cliente");
+
+        return;
+    }
+
+    if (!monto || monto <= 0) {
+
+        alert("Ingresa un monto válido");
+
+        return;
+    }
+
+    /*
+     * Se consulta otra vez el saldo real.
+     * Así no dependemos de los 20 clientes cargados.
+     */
+    const {
+        data: cliente,
+        error: errorCliente
+    } =
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select(
+                "id,nombre,saldo"
+            )
+            .eq("id", clienteId)
+            .single();
+
+    if (errorCliente || !cliente) {
+
+        console.error(
+            "Error consultando cliente:",
+            errorCliente
+        );
+
+        alert(
+            "No se pudo consultar el saldo actual del cliente"
+        );
+
+        return;
+    }
+
+    const saldoActual =
+        Number(cliente.saldo);
+
+    if (saldoActual <= 0) {
+
+        alert(
+            "Este cliente ya no tiene saldo pendiente"
+        );
+
+        return;
+    }
+
+    if (monto > saldoActual) {
+
+        alert(
+            `El pago no puede superar el saldo actual de $${saldoActual.toFixed(2)}`
+        );
+
+        document
+            .getElementById("pagoSaldo")
+            .value = saldoActual;
+
+        actualizarResumenPago();
+
+        return;
+    }
+
+    const boton =
+        document.querySelector(
+            "#modalBody .save-btn"
+        );
+
+    if (boton) {
+
+        boton.disabled = true;
+
+        boton.innerHTML = `
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            Registrando...
+        `;
+    }
 
     const { error } =
         await supabaseClient
             .from("ccp_movimientos")
             .insert({
-                        cliente_id: clienteId,
-                        piso_id: pisoId,
-                        tipo: "PAGO",
-                        concepto: "Pago en efectivo",
-                        monto: Math.abs(monto),
-                        fecha: new Date().toISOString()
-                    })
+                cliente_id: clienteId,
+                piso_id: pisoId,
+                tipo: "PAGO",
+                concepto: "Pago en efectivo",
+                monto: Math.abs(monto),
+                fecha: new Date().toISOString()
+            });
 
-    if(error){
+    if (error) {
+
+        console.error(
+            "Error registrando pago:",
+            error
+        );
 
         alert(error.message);
+
+        if (boton) {
+
+            boton.disabled = false;
+
+            boton.innerHTML =
+                "Guardar Pago";
+        }
 
         return;
     }
 
-    alert("Pago registrado");
+    const saldoRestante =
+        Math.max(
+            0,
+            saldoActual - monto
+        );
+
+    alert(
+        saldoRestante === 0
+            ? `Pago registrado. ${cliente.nombre} liquidó su deuda.`
+            : `Pago registrado. Saldo restante: $${saldoRestante.toFixed(2)}`
+    );
 
     cerrarModal();
 
-    cargarClientes();
+    await cargarClientes({
+        reiniciar: true
+    });
+
+    cargarResumen();
 }
 
 function generarCorte() {
