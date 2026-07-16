@@ -487,7 +487,7 @@ async function cargarVistaUsuario(clienteId){
             </div>
             <div class="client-right">
                 <div class="client-balance ${
-                    Number(cliente.saldo)>500
+                    Number(cliente.saldo)>400
                     ? "red"
                     : Number(cliente.saldo)>100
                     ? "orange"
@@ -531,7 +531,7 @@ function notificar(id) {
 
 Te compartimos tu saldo actual de cafetería.
 
-Adeudo pendiente: $${Number(cliente.saldo).toFixed(2)}
+Saldo pendiente: $${Number(cliente.saldo).toFixed(2)}
 
 Gracias ☕`;
 
@@ -1151,33 +1151,26 @@ async function nuevoPago() {
             </select>
 
 <select id="pagoPiso">
-
     <option value="23">
         Piso 23
     </option>
-
     <option value="26">
         Piso 26
     </option>
-
 </select>
-
             <input
                 id="pagoMonto"
                 type="number"
                 placeholder="Monto"
             >
-
             <button
                 class="save-btn"
                 onclick="guardarPago()"
             >
                 Guardar Pago
             </button>
-
         </div>
     `;
-
     abrirModal();
 }
 
@@ -1207,7 +1200,7 @@ if(!cliente){
 if(monto > Number(cliente.saldo)){
 
     alert(
-        `El adeudo actual es de $${Number(cliente.saldo).toFixed(2)}`
+        `Tu saldo pendiente actual es de $${Number(cliente.saldo).toFixed(2)}`
     );
 
     return;
