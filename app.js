@@ -1010,13 +1010,19 @@ function actualizarTotalConsumo() {
 function configurarBuscadorClienteConsumo() {
 
     const input =
-        document.getElementById("buscarClienteConsumo");
+        document.getElementById(
+            "buscarClienteConsumo"
+        );
 
     const resultados =
-        document.getElementById("resultadosClienteConsumo");
+        document.getElementById(
+            "resultadosClienteConsumo"
+        );
 
     const loading =
-        document.getElementById("loadingClienteConsumo");
+        document.getElementById(
+            "loadingClienteConsumo"
+        );
 
     let temporizador = null;
 
@@ -1027,10 +1033,14 @@ function configurarBuscadorClienteConsumo() {
         const texto =
             input.value.trim();
 
-        document.getElementById("consumoCliente").value = "";
+        document
+            .getElementById("consumoCliente")
+            .value = "";
 
         document
-            .getElementById("clienteSeleccionadoConsumo")
+            .getElementById(
+                "clienteSeleccionadoConsumo"
+            )
             .classList.add("hidden");
 
         if (texto.length < 2) {
@@ -1038,6 +1048,8 @@ function configurarBuscadorClienteConsumo() {
             resultados.innerHTML = "";
 
             resultados.classList.add("hidden");
+
+            loading.classList.add("hidden");
 
             return;
         }
@@ -1047,94 +1059,63 @@ function configurarBuscadorClienteConsumo() {
             loading.classList.remove("hidden");
 
             const textoSeguro =
-                texto.replace(/[%_,()]/g, " ");
+                texto
+                    .replace(/[%_,()]/g, " ")
+                    .trim();
 
-           const {
-    data: clientesEncontrados,
-    error
-} =
-    await supabaseClient
-        .from("ccp_clientes")
-        .select(`
-            id,
-            nombre,
-            departamento,
-            telefono
-        `)
-        .eq("activo", true)
-        .or(
-            `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
-        )
-        .order("nombre", {
-            ascending: true
-        })
-        .limit(15);
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .from("ccp_clientes")
+                    .select(`
+                        id,
+                        nombre,
+                        departamento,
+                        telefono
+                    `)
+                    .eq("activo", true)
+                    .or(
+                        `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
+                    )
+                    .order("nombre", {
+                        ascending: true
+                    })
+                    .limit(15);
 
-let data = clientesEncontrados || [];
+            loading.classList.add("hidden");
 
-if (!error && data.length > 0) {
+            if (error) {
 
-    const ids =
-        data.map(cliente => cliente.id);
+                console.error(
+                    "Error buscando clientes:",
+                    error
+                );
 
-    const {
-        data: saldos,
-        error: errorSaldos
-    } =
-        await supabaseClient
-            .from("ccp_v_saldos_clientes")
-            .select("id,saldo")
-            .in("id", ids);
+                resultados.innerHTML = `
+                    <div class="client-result-empty">
+                        No se pudieron buscar clientes
+                    </div>
+                `;
 
-    if (errorSaldos) {
-        console.error(
-            "Error consultando saldos:",
-            errorSaldos
-        );
-    }
+                resultados.classList.remove("hidden");
 
-    const saldosPorCliente =
-        Object.fromEntries(
-            (saldos || []).map(cliente => [
-                String(cliente.id),
-                Number(cliente.saldo) || 0
-            ])
-        );
+                return;
+            }
 
-    data = data.map(cliente => ({
-        ...cliente,
-        saldo:
-            saldosPorCliente[
-                String(cliente.id)
-            ] || 0
-    }));
-}
+            const clientesEncontrados =
+                (data || []).map(cliente => ({
+                    ...cliente,
+                    saldo: 0
+                }));
 
-loading.classList.add("hidden");
+            mostrarResultadosClienteConsumo(
+                clientesEncontrados
+            );
 
-if (error) {
-
-    console.error(
-        "Error buscando clientes:",
-        error
-    );
-
-    resultados.innerHTML = `
-        <div class="client-result-empty">
-            No se pudieron buscar clientes
-        </div>
-    `;
-
-    resultados.classList.remove("hidden");
-
-    return;
-}
-
-mostrarResultadosClienteConsumo(data);
-
-}, 300);
-
-});
+        }, 300);
+    });
 }
 
 function mostrarResultadosClienteConsumo(clientesEncontrados) {
