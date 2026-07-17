@@ -383,7 +383,7 @@ function renderClientes() {
     ) {
         container.innerHTML = `
             <div class="empty-state">
-                No hay clientes registrados
+                No hay clientes con saldo pendiente
             </div>
         `;
 
@@ -477,11 +477,15 @@ function renderClientes() {
 
 async function cargarResumen() {
 
-    const { data, error } =
+    const {
+        data,
+        error
+    } =
         await supabaseClient
             .rpc("get_ccp_resumen");
 
     if (error) {
+
         console.error(
             "Error cargando resumen:",
             error
@@ -499,17 +503,41 @@ async function cargarResumen() {
     document
         .getElementById("totalAdeudo")
         .textContent =
-        `$${Number(resumen.total_adeudo).toFixed(2)}`;
+        `$${Number(
+            resumen.total_adeudo || 0
+        ).toFixed(2)}`;
 
     document
         .getElementById("totalClientes")
         .textContent =
-        Number(resumen.total_clientes);
+        Number(
+            resumen.total_clientes || 0
+        );
 
     document
         .getElementById("clientesPendientes")
         .textContent =
-        Number(resumen.clientes_pendientes);
+        Number(
+            resumen.clientes_pendientes || 0
+        );
+}
+
+async function refrescarDashboard() {
+
+    busquedaClientes = "";
+
+    const buscador =
+        document.getElementById("searchClient");
+
+    if (buscador) {
+        buscador.value = "";
+    }
+
+    await cargarClientes({
+        reiniciar: true
+    });
+
+    await cargarResumen();
 }
 function iniciarVista(){
 
@@ -581,6 +609,7 @@ const {
         .maybeSingle();
 
 if (errorSaldo) {
+
     console.error(
         "Error consultando saldo:",
         errorSaldo
@@ -1216,7 +1245,6 @@ function seleccionarClienteConsumo(cliente) {
 
 async function guardarConsumo() {
 
-    
     const clienteId =
         document.getElementById("consumoCliente").value;
 
@@ -1299,8 +1327,9 @@ if (productosSeleccionados.length === 0) {
 alert(
     `${movimientos.length} productos registrados · Total $${total.toFixed(2)}`
 );
+
     cerrarModal();
-    cargarClientes();
+    await refrescarDashboard();
 }
 
 async function nuevoPago() {
@@ -1963,15 +1992,10 @@ async function guardarPago() {
             : `Pago registrado. Saldo restante: $${saldoRestante.toFixed(2)}`
     );
 
-    cerrarModal();
+cerrarModal();
+await refrescarDashboard();
 
-    await cargarClientes({
-        reiniciar: true
-    });
-
-    cargarResumen();
 }
-
 function generarCorte() {
 
     const totalAdeudo =
@@ -2205,9 +2229,9 @@ async function cancelarMovimiento(id){
         return;
     }
 
-    alert("Movimiento cancelado");
-    cerrarModal();
-    cargarClientes();
+alert("Movimiento cancelado");
+cerrarModal();
+await refrescarDashboard();
 }
 
 async function desactivarCliente(id){
@@ -2243,7 +2267,7 @@ async function desactivarCliente(id){
 
     alert("Cliente dado de baja");
 
-    cargarClientes();
+await refrescarDashboard();
 }
 
 async function editarCliente(id){
@@ -2359,7 +2383,6 @@ async function guardarEdicionCliente(id){
 
     alert("Cliente actualizado");
 
-    cerrarModal();
-
-    cargarClientes();
+cerrarModal();
+await refrescarDashboard();
 }
