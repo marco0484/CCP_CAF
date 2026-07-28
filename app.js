@@ -833,7 +833,7 @@ async function nuevoConsumo() {
             .from("ccp_productos")
             .select("*")
             .eq("activo", true)
-            .order("nombre", {
+            .order("id_categoria", {
                 ascending: true
             });
 
