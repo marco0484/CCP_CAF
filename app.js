@@ -829,13 +829,16 @@ function nuevoCliente() {
 async function nuevoConsumo() {
 
     const { data: productos, error } =
-        await supabaseClient
-            .from("ccp_productos")
-            .select("*")
-            .eq("activo", true)
-            .order("id_categoria", {
-                ascending: true
-            });
+    await supabaseClient
+        .from("ccp_productos")
+        .select("*")
+        .eq("activo", true)
+        .order("id_categoria", {
+            ascending: true
+        })
+        .order("nombre", {
+            ascending: true
+        });
 
     if (error) {
         console.error(error);
