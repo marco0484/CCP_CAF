@@ -897,6 +897,7 @@ async function nuevoConsumo() {
                         Piso 26
                     </option>
                 </select>
+                
 
                 <div class="productos-selector">
 
@@ -1398,27 +1399,38 @@ async function nuevoPago() {
                     "
                 ></div>
 
-                <select id="pagoPiso">
+<select id="pagoPiso">
 
-                    <option value="23">
-                        Piso 23
-                    </option>
+    <option value="23">
+        Piso 23
+    </option>
 
-                    <option value="26">
-                        Piso 26
-                    </option>
+    <option value="26">
+        Piso 26
+    </option>
 
-                </select>
+</select>
 
-                <input
-                    id="pagoMonto"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="Monto a pagar"
-                    oninput="actualizarResumenPago()"
-                >
+<select id="tipoPago">
 
+    <option value="1">
+        💵 Efectivo
+    </option>
+
+    <option value="2">
+        💳 Tarjeta
+    </option>
+
+</select>
+
+<input
+    id="pagoMonto"
+    type="number"
+    min="0.01"
+    step="0.01"
+    placeholder="Monto a pagar"
+    oninput="actualizarResumenPago()"
+>
                 <div
                     id="resumenPago"
                     class="hidden"
@@ -1854,16 +1866,10 @@ function actualizarResumenPago() {
 
 async function guardarPago() {
 
-    const clienteId =
-        document.getElementById("pagoCliente").value;
-
-    const pisoId =
-        document.getElementById("pagoPiso").value;
-
-    const monto =
-        Number(
-            document.getElementById("pagoMonto").value
-        );
+const clienteId = document.getElementById("pagoCliente").value;
+const pisoId = document.getElementById("pagoPiso").value;
+const tipoPago = Number( document.getElementById("tipoPago").value);
+const monto = Number(document.getElementById("pagoMonto").value);
 
     if (!clienteId) {
 
@@ -1878,11 +1884,6 @@ async function guardarPago() {
 
         return;
     }
-
-    /*
-     * Se consulta otra vez el saldo real.
-     * Así no dependemos de los 20 clientes cargados.
-     */
     const {
         data: cliente,
         error: errorCliente
@@ -1952,16 +1953,19 @@ async function guardarPago() {
     }
 
     const { error } =
-        await supabaseClient
-            .from("ccp_movimientos")
-            .insert({
-                cliente_id: clienteId,
-                piso_id: pisoId,
-                tipo: "PAGO",
-                concepto: "Pago en efectivo",
-                monto: Math.abs(monto),
-                fecha: new Date().toISOString()
-            });
+    await supabaseClient
+        .from("ccp_movimientos")
+        .insert({
+            cliente_id: clienteId,
+            piso_id: pisoId,
+            id_tipo_pago: tipoPago,
+            tipo: "PAGO",
+            concepto: tipoPago === 1
+                ? "Pago en efectivo"
+                : "Pago con tarjeta",
+            monto: Math.abs(monto),
+            fecha: new Date().toISOString()
+        });
 
     if (error) {
 
