@@ -2003,49 +2003,74 @@ cerrarModal();
 await refrescarDashboard();
 
 }
-function generarCorte() {
 
-    const totalAdeudo =
-        clientes.reduce(
-            (t,c) => t + Number(c.saldo),
-            0
-        );
+async function generarCorte() {
 
-    const pendientes =
-        clientes.filter(
-            c => Number(c.saldo) > 0
-        ).length;
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
 
-    document.getElementById("modalTitle")
-        .innerHTML = "Corte del Día";
+    const { data, error } = await supabaseClient
+        .from("ccp_movimientos")
+        .select("tipo,monto,id_tipo_pago,fecha,cancelado")
+        .eq("tipo","PAGO")
+        .eq("cancelado", false);
 
-    document.getElementById("modalBody")
-        .innerHTML = `
+    if(error){
+        alert(error.message);
+        return;
+    }
 
+    const pagosHoy = (data || []).filter(m => {
+        const fecha = new Date(m.fecha);
+        fecha.setHours(0,0,0,0);
+        return fecha.getTime() === hoy.getTime();
+    });
+
+    let efectivo = 0;
+    let tarjeta = 0;
+
+    pagosHoy.forEach(p => {
+
+        if(Number(p.id_tipo_pago) === 1){
+            efectivo += Number(p.monto);
+        }
+
+        if(Number(p.id_tipo_pago) === 2){
+            tarjeta += Number(p.monto);
+        }
+
+    });
+
+    const total = efectivo + tarjeta;
+
+    document.getElementById("modalTitle").innerHTML =
+        "Corte del Día";
+
+    document.getElementById("modalBody").innerHTML = `
         <div class="modal-body">
 
-            <h2>
-                Total Adeudo:
-                $${totalAdeudo.toFixed(2)}
-            </h2>
+            <h3>📅 ${new Date().toLocaleDateString()}</h3>
 
-            <h3>
-                Clientes Pendientes:
-                ${pendientes}
-            </h3>
+            <hr>
 
-            <h3>
-                Clientes Registrados:
-                ${clientes.length}
-            </h3>
+            <h2>💵 Efectivo</h2>
+            <h1>$${efectivo.toFixed(2)}</h1>
+
+            <h2>💳 Tarjeta</h2>
+            <h1>$${tarjeta.toFixed(2)}</h1>
+
+            <hr>
+
+            <h2>💰 Total Cobrado</h2>
+            <h1>$${total.toFixed(2)}</h1>
+
+            <h3>🧾 Pagos realizados: ${pagosHoy.length}</h3>
 
         </div>
     `;
 
     abrirModal();
 }
-
-/* VER HISTORIAL */
 
 async function verHistorial(clienteId) {
 
