@@ -1145,26 +1145,23 @@ function configurarBuscadorClienteConsumo() {
                     .replace(/[%_,()]/g, " ")
                     .trim();
 
-            const {
-                data,
-                error
-            } =
-                await supabaseClient
-                    .from("ccp_clientes")
-                    .select(`
-                        id,
-                        nombre,
-                        departamento,
-                        telefono
-                    `)
-                    .eq("activo", true)
-                    .or(
-                        `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
-                    )
-                    .order("nombre", {
-                        ascending: true
-                    })
-                    .limit(15);
+            const { data, error } =
+    await supabaseClient
+        .from("ccp_v_saldos_clientes")
+        .select(`
+            id,
+            nombre,
+            departamento,
+            telefono,
+            saldo
+        `)
+        .or(
+            `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
+        )
+        .order("nombre", {
+            ascending: true
+        })
+        .limit(15);
 
             loading.classList.add("hidden");
 
@@ -1192,10 +1189,7 @@ function configurarBuscadorClienteConsumo() {
                     saldo: 0
                 }));
 
-            mostrarResultadosClienteConsumo(
-                clientesEncontrados
-            );
-
+            mostrarResultadosClienteConsumo( data || [] );
         }, 300);
     });
 }
