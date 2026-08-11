@@ -187,88 +187,34 @@ async function cargarClientes({
         nuevosClientes = data || [];
         errorConsulta = error;
     }
-    else {
+ else {
 
-        const texto =
-            busquedaClientes
-                .replace(/[%_,()]/g, " ")
-                .trim();
+    const texto =
+        busquedaClientes
+            .replace(/[%_,()]/g, " ")
+            .trim();
 
-        const {
-            data: clientesEncontrados,
-            error: errorClientes
-        } =
-            await supabaseClient
-                .from("ccp_clientes")
-                .select(`
-                    id,
-                    nombre,
-                    telefono,
-                    departamento
-                `)
-                .eq("activo", true)
-                .or(
-                    `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
-                )
-                .order("nombre", {
-                    ascending: true
-                })
-                .range(desde, hasta);
+    const { data, error } =
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select(`
+                id,
+                nombre,
+                telefono,
+                departamento,
+                saldo
+            `)
+            .or(
+                `nombre.ilike.%${texto}%,departamento.ilike.%${texto}%,telefono.ilike.%${texto}%`
+            )
+            .order("saldo", {
+                ascending: false
+            })
+            .range(desde, hasta);
 
-        if (errorClientes) {
-            errorConsulta = errorClientes;
-        }
-        else {
-
-            const encontrados =
-                clientesEncontrados || [];
-
-            const ids =
-                encontrados.map(cliente => cliente.id);
-
-            let saldosPorCliente = {};
-
-            /*
-             * Solo calcula/consulta el saldo de los
-             * clientes encontrados, no de todos.
-             */
-            if (ids.length > 0) {
-
-                const {
-                    data: saldos,
-                    error: errorSaldos
-                } =
-                    await supabaseClient
-                        .from("ccp_v_saldos_clientes")
-                        .select("id,saldo")
-                        .in("id", ids);
-
-                if (errorSaldos) {
-                    console.error(
-                        "Error consultando saldos:",
-                        errorSaldos
-                    );
-                }
-
-                saldosPorCliente =
-                    Object.fromEntries(
-                        (saldos || []).map(cliente => [
-                            String(cliente.id),
-                            Number(cliente.saldo) || 0
-                        ])
-                    );
-            }
-
-            nuevosClientes =
-                encontrados.map(cliente => ({
-                    ...cliente,
-                    saldo:
-                        saldosPorCliente[
-                            String(cliente.id)
-                        ] || 0
-                }));
-        }
-    }
+    nuevosClientes = data || [];
+    errorConsulta = error;
+}
 
     cargandoClientes = false;
 
