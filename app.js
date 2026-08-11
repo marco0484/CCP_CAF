@@ -1145,16 +1145,19 @@ function configurarBuscadorClienteConsumo() {
                     .replace(/[%_,()]/g, " ")
                     .trim();
 
-            const { data, error } =
+            const {
+    data: clientesEncontrados,
+    error
+} =
     await supabaseClient
-        .from("ccp_v_saldos_clientes")
+        .from("ccp_clientes")
         .select(`
             id,
             nombre,
             departamento,
-            telefono,
-            saldo
+            telefono
         `)
+        .eq("activo", true)
         .or(
             `nombre.ilike.%${textoSeguro}%,departamento.ilike.%${textoSeguro}%,telefono.ilike.%${textoSeguro}%`
         )
@@ -1163,41 +1166,94 @@ function configurarBuscadorClienteConsumo() {
         })
         .limit(15);
 
-            loading.classList.add("hidden");
+loading.classList.add("hidden");
 
-            if (error) {
+if (error) {
 
-                console.error(
-                    "Error buscando clientes:",
-                    error
-                );
+    console.error(
+        "Error buscando clientes:",
+        error
+    );
 
-                resultados.innerHTML = `
-                    <div class="client-result-empty">
-                        No se pudieron buscar clientes
-                    </div>
-                `;
+    resultados.innerHTML = `
+        <div class="client-result-empty">
+            No se pudieron buscar clientes
+        </div>
+    `;
 
-                resultados.classList.remove("hidden");
+    resultados.classList.remove("hidden");
 
-                return;
-            }
+    return;
+}
 
-            const clientesEncontrados =
-                (data || []).map(cliente => ({
-                    ...cliente,
-                    saldo: 0
-                }));
 
-            mostrarResultadosClienteConsumo( data || [] );
+/* =========================
+   OBTENER SALDOS
+========================= */
+
+const ids =
+    (clientesEncontrados || [])
+        .map(cliente => cliente.id);
+
+let saldosPorCliente = {};
+
+if (ids.length > 0) {
+
+    const {
+        data: saldos,
+        error: errorSaldos
+    } =
+        await supabaseClient
+            .from("ccp_v_saldos_clientes")
+            .select("id,saldo")
+            .in("id", ids);
+
+    if (errorSaldos) {
+
+        console.error(
+            "Error obteniendo saldos:",
+            errorSaldos
+        );
+
+    } else {
+
+        saldosPorCliente =
+            Object.fromEntries(
+                (saldos || []).map(cliente => [
+                    String(cliente.id),
+                    Number(cliente.saldo) || 0
+                ])
+            );
+    }
+}
+
+
+/* =========================
+   UNIR CLIENTES + SALDO
+========================= */
+
+const clientesConSaldo =
+    (clientesEncontrados || [])
+        .map(cliente => ({
+            ...cliente,
+
+            saldo:
+                saldosPorCliente[
+                    String(cliente.id)
+                ] || 0
+        }));
+
+mostrarResultadosClienteConsumo(
+    clientesConSaldo
+);
+
         }, 300);
     });
 }
 
 function mostrarResultadosClienteConsumo(clientesEncontrados) {
 
-    const resultados =
-        document.getElementById("resultadosClienteConsumo");
+    const resultados = document.getElementById("resultadosClienteConsumo");
 
     if (!clientesEncontrados.length) {
 
