@@ -167,11 +167,6 @@ async function cargarClientes({
     let nuevosClientes = [];
     let errorConsulta = null;
 
-    /*
-     * SIN BÚSQUEDA:
-     * La pantalla principal consulta únicamente
-     * la vista de clientes con adeudo.
-     */
     if (!busquedaClientes) {
 
         const { data, error } =
@@ -192,12 +187,6 @@ async function cargarClientes({
         nuevosClientes = data || [];
         errorConsulta = error;
     }
-
-    /*
-     * CON BÚSQUEDA:
-     * Busca directamente en todos los clientes,
-     * incluyendo quienes no tienen adeudo.
-     */
     else {
 
         const texto =
@@ -352,9 +341,7 @@ function actualizarBotonCargarMas() {
     }
 
     boton.classList.remove("hidden");
-
     boton.disabled = cargandoClientes;
-
     boton.innerHTML = cargandoClientes
         ? `
             <i class="fa-solid fa-circle-notch fa-spin"></i>
@@ -364,6 +351,127 @@ function actualizarBotonCargarMas() {
             <i class="fa-solid fa-chevron-down"></i>
             Cargar más clientes
         `;
+}
+
+function nuevoCobroRapido() {
+
+    document
+        .getElementById("modalTitle")
+        .innerHTML = "Cobro rápido";
+
+    document
+        .getElementById("modalBody")
+        .innerHTML = `
+            <div class="modal-body">
+
+                <select id="cobroRapidoPiso">
+                    <option value="23">
+                        Piso 23
+                    </option>
+
+                    <option value="26">
+                        Piso 26
+                    </option>
+                </select>
+
+                <input
+                    id="cobroRapidoMonto"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Dinero recibido"
+                >
+
+                <button
+                    class="save-btn"
+                    onclick="guardarCobroRapido()"
+                >
+                    Registrar entrada
+                </button>
+
+            </div>
+        `;
+
+    abrirModal();
+
+    document
+        .getElementById("cobroRapidoMonto")
+        .focus();
+}
+
+async function guardarCobroRapido() {
+
+    const monto =
+        Number(
+            document.getElementById("cobroRapidoMonto").value
+        );
+
+    const pisoId =
+        document.getElementById("cobroRapidoPiso").value;
+
+    if (!monto || monto <= 0) {
+
+        alert("Ingresa un monto válido");
+
+        return;
+    }
+
+    const {
+        data: mostrador,
+        error: errorMostrador
+    } =
+        await supabaseClient
+            .from("ccp_clientes")
+            .select("id,nombre")
+            .ilike("nombre", "mostrador")
+            .eq("activo", true)
+            .maybeSingle();
+
+    if (errorMostrador || !mostrador) {
+
+        console.error(
+            "Error buscando mostrador:",
+            errorMostrador
+        );
+
+        alert(
+            'No se encontró el usuario "mostrador"'
+        );
+
+        return;
+    }
+
+   const { error } =
+    await supabaseClient
+        .from("ccp_movimientos")
+        .insert({
+            cliente_id: mostrador.id,
+            piso_id: pisoId,
+            id_tipo_pago: 1,
+            tipo: "ENTRADA",
+            concepto: "Cobro rápido · Entrada de efectivo · Usuario: mostrador",
+            monto: Math.abs(monto),
+            fecha: new Date().toISOString()
+        });
+
+if (error) {
+
+    console.error(
+        "Error registrando entrada:",
+        error
+    );
+
+    alert(error.message);
+
+    return;
+}
+
+alert(
+    `Entrada registrada: $${monto.toFixed(2)}`
+);
+
+cerrarModal();
+
 }
 
 function renderClientes() {
@@ -773,18 +881,13 @@ async function guardarCliente() {
             });
 
     if(error){
-
         console.error(error);
-
         alert(error.message);
-
         return;
     }
 
     alert("Cliente registrado");
-
     cerrarModal();
-
     cargarClientes();
 }
 
@@ -2012,7 +2115,7 @@ async function generarCorte() {
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
         .select("tipo,monto,id_tipo_pago,fecha,cancelado")
-        .eq("tipo","PAGO")
+       .in("tipo", ["PAGO", "ENTRADA"])
         .eq("cancelado", false);
 
     if(error){
@@ -2026,22 +2129,38 @@ async function generarCorte() {
         return fecha.getTime() === hoy.getTime();
     });
 
-    let efectivo = 0;
-    let tarjeta = 0;
+let pagosEfectivo = 0;
+let pagosTarjeta = 0;
+let cobroRapido = 0;
 
-    pagosHoy.forEach(p => {
+pagosHoy.forEach(movimiento => {
 
-        if(Number(p.id_tipo_pago) === 1){
-            efectivo += Number(p.monto);
-        }
+    if (movimiento.tipo === "ENTRADA") {
 
-        if(Number(p.id_tipo_pago) === 2){
-            tarjeta += Number(p.monto);
-        }
+        cobroRapido += Number(movimiento.monto);
 
-    });
+        return;
+    }
 
-    const total = efectivo + tarjeta;
+    if (
+        movimiento.tipo === "PAGO" &&
+        Number(movimiento.id_tipo_pago) === 1
+    ) {
+
+        pagosEfectivo += Number(movimiento.monto);
+    }
+
+    if (
+        movimiento.tipo === "PAGO" &&
+        Number(movimiento.id_tipo_pago) === 2
+    ) {
+
+        pagosTarjeta += Number(movimiento.monto);
+    }
+
+});
+
+const total = pagosEfectivo + pagosTarjeta + cobroRapido;
 
     document.getElementById("modalTitle").innerHTML =
         "Corte del Día";
@@ -2053,19 +2172,20 @@ async function generarCorte() {
 
             <hr>
 
-            <h2>💵 Efectivo</h2>
-            <h1>$${efectivo.toFixed(2)}</h1>
+            <h2>💵 Pagos en efectivo</h2>
+            <h1>$${pagosEfectivo.toFixed(2)}</h1>
 
-            <h2>💳 Tarjeta</h2>
-            <h1>$${tarjeta.toFixed(2)}</h1>
+            <h2>💳 Pagos con tarjeta</h2>
+            <h1>$${pagosTarjeta.toFixed(2)}</h1>
+
+            <h2>⚡ Cobro rápido</h2>
+            <h1>$${cobroRapido.toFixed(2)}</h1>
 
             <hr>
 
-            <h2>💰 Total Cobrado</h2>
-            <h1>$${total.toFixed(2)}</h1>
-
-            <h3>🧾 Pagos realizados: ${pagosHoy.length}</h3>
-
+          <h2>💰 Total ingresado</h2>
+          <h1>$${total.toFixed(2)}</h1>
+          <h3>🧾 Movimientos registrados: ${pagosHoy.length}</h3>
         </div>
     `;
 
