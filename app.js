@@ -592,7 +592,9 @@ async function refrescarDashboard() {
     });
 
     await cargarResumen();
+    await cargarDineroCaja();
 }
+
 function iniciarVista(){
 
     const usuario =
@@ -618,6 +620,7 @@ function iniciarVista(){
 
         cargarResumen();
         cargarClientes();
+        cargarDineroCaja();
         return;
     }
 
@@ -2487,6 +2490,142 @@ async function editarCliente(id){
     `;
 
     abrirModal();
+}
+
+async function cargarDineroCaja() {
+
+    const { data, error } = await supabaseClient
+        .from("ccp_movimientos")
+        .select("monto")
+        .eq("tipo", "PAGO")
+        .eq("cancelado", false);
+
+    if (error) {
+        console.error("Error consultando caja:", error);
+        return;
+    }
+
+    const total = (data || []).reduce(
+        (suma, pago) => suma + Number(pago.monto),
+        0
+    );
+
+    const elemento = document.getElementById("dineroCaja");
+
+    if (elemento) {
+        elemento.textContent = `$${total.toFixed(2)}`;
+    }
+
+    return total;
+}
+
+async function verDineroCaja() {
+
+    const { data, error } = await supabaseClient
+        .from("ccp_movimientos")
+        .select("monto,id_tipo_pago")
+        .eq("tipo", "PAGO")
+        .eq("cancelado", false);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    let efectivo = 0;
+    let tarjeta = 0;
+
+    (data || []).forEach(pago => {
+
+        if (Number(pago.id_tipo_pago) === 1) {
+            efectivo += Number(pago.monto);
+        }
+
+        if (Number(pago.id_tipo_pago) === 2) {
+            tarjeta += Number(pago.monto);
+        }
+
+    });
+
+    const total = efectivo + tarjeta;
+
+    document.getElementById("modalTitle").innerHTML =
+        "Dinero en caja";
+
+    document.getElementById("modalBody").innerHTML = `
+        <div class="modal-body">
+
+            <h3>💵 Efectivo</h3>
+            <h1>$${efectivo.toFixed(2)}</h1>
+
+            <h3>💳 Tarjeta</h3>
+            <h1>$${tarjeta.toFixed(2)}</h1>
+
+            <hr>
+
+            <h2>Total pendiente de entregar</h2>
+            <h1>$${total.toFixed(2)}</h1>
+
+            <small>
+                ${data.length} pagos pendientes de entregar
+            </small>
+
+        </div>
+    `;
+
+    abrirModal();
+}
+
+async function entregarCuenta() {
+
+    const { data, error } = await supabaseClient
+        .from("ccp_movimientos")
+        .select("id,monto")
+        .eq("tipo", "PAGO")
+        .eq("cancelado", false);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        alert("No hay dinero pendiente por entregar");
+        return;
+    }
+
+    const total = data.reduce(
+        (suma, pago) => suma + Number(pago.monto),
+        0
+    );
+
+    const confirmar = confirm(
+        `¿Entregar cuenta por $${total.toFixed(2)}?\n\n` +
+        `${data.length} pagos serán marcados como entregados.`
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    const { error: errorEntrega } = await supabaseClient
+        .from("ccp_movimientos")
+        .update({
+            cancelado: true
+        })
+        .eq("tipo", "PAGO")
+        .eq("cancelado", false);
+
+    if (errorEntrega) {
+        alert(errorEntrega.message);
+        return;
+    }
+
+    alert(
+        `Cuenta entregada correctamente.\n\nTotal: $${total.toFixed(2)}`
+    );
+
+    await refrescarDashboard();
 }
 
 async function guardarEdicionCliente(id){
