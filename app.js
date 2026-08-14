@@ -395,7 +395,6 @@ async function guardarCobroRapido() {
             piso_id: pisoId,
             id_tipo_pago: 1,
             tipo: "ENTRADA",
-            concepto: "Cobro rápido · Entrada de efectivo · Usuario: mostrador",
             monto: Math.abs(monto),
         });
 
@@ -1048,8 +1047,7 @@ function cambiarCantidadProducto(productoId, cambio) {
         return;
     }
 
-    const cantidadActual =
-        Number(cantidadElement.textContent);
+    const cantidadActual = Number(cantidadElement.textContent);
 
     const nuevaCantidad =
         Math.max(0, cantidadActual + cambio);
@@ -1325,16 +1323,14 @@ function seleccionarClienteConsumo(cliente) {
 
 async function guardarConsumo() {
 
-    const clienteId =
-        document.getElementById("consumoCliente").value;
+    const clienteId = document.getElementById("consumoCliente").value;
 
     if (!clienteId) {
         alert("Busca y selecciona un cliente");
         return;
     }
 
-    const pisoId =
-        document.getElementById("consumoPiso").value;
+    const pisoId = document.getElementById("consumoPiso").value;
 
     const productosSeleccionados = [];
 
@@ -2035,9 +2031,6 @@ const monto = Number(document.getElementById("pagoMonto").value);
             piso_id: pisoId,
             id_tipo_pago: tipoPago,
             tipo: "PAGO",
-            concepto: tipoPago === 1
-                ? "Pago en efectivo"
-                : "Pago con tarjeta",
             monto: Math.abs(monto),
         });
 
