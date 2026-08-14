@@ -1324,29 +1324,94 @@ function seleccionarClienteConsumo(cliente) {
     seleccionado.classList.remove("hidden");
 }
 
-const movimientos =
-    productosSeleccionados.flatMap(producto =>
+async function guardarConsumo() {
 
-        Array.from(
-            {
-                length: producto.cantidad
-            },
-            () => ({
-                cliente_id: clienteId,
-                producto_id: producto.id,
-                piso_id: pisoId,
-                tipo: "CONSUMO",
-                monto: producto.precio,
-                fecha: new Date().toISOString()
-            })
-        )
+    const clienteId =
+        document.getElementById("consumoCliente").value;
 
+    if (!clienteId) {
+        alert("Busca y selecciona un cliente");
+        return;
+    }
+
+    const pisoId =
+        document.getElementById("consumoPiso").value;
+
+    const productosSeleccionados = [];
+
+    document
+        .querySelectorAll(".producto-row")
+        .forEach(producto => {
+
+            const cantidad =
+                Number(
+                    producto
+                        .querySelector(".producto-cantidad")
+                        .textContent
+                );
+
+            if (cantidad > 0) {
+
+                productosSeleccionados.push({
+                    id: producto.dataset.id,
+                    precio: Number(producto.dataset.precio),
+                    cantidad: cantidad
+                });
+            }
+        });
+
+    if (productosSeleccionados.length === 0) {
+        alert("Selecciona al menos un producto");
+        return;
+    }
+
+    const movimientos =
+        productosSeleccionados.flatMap(producto =>
+
+            Array.from(
+                {
+                    length: producto.cantidad
+                },
+                () => ({
+                    cliente_id: clienteId,
+                    producto_id: producto.id,
+                    piso_id: pisoId,
+                    tipo: "CONSUMO",
+                    monto: producto.precio,
+                    fecha: new Date().toISOString()
+                })
+            )
+        );
+
+    const { error } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .insert(movimientos);
+
+    if (error) {
+        console.error(
+            "Error registrando consumo:",
+            error
+        );
+
+        alert(error.message);
+        return;
+    }
+
+    const total =
+        movimientos.reduce(
+            (suma, movimiento) =>
+                suma + Number(movimiento.monto),
+            0
+        );
+
+    alert(
+        `${movimientos.length} productos registrados · Total $${total.toFixed(2)}`
     );
 
-const { error } =
-    await supabaseClient
-        .from("ccp_movimientos")
-        .insert(movimientos);
+    cerrarModal();
+    await refrescarDashboard();
+}
 
 async function nuevoPago() {
 
