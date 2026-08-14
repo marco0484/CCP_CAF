@@ -1094,48 +1094,23 @@ function actualizarTotalConsumo() {
 
 function configurarBuscadorClienteConsumo() {
 
-    const input =
-        document.getElementById(
-            "buscarClienteConsumo"
-        );
-
-    const resultados =
-        document.getElementById(
-            "resultadosClienteConsumo"
-        );
-
-    const loading =
-        document.getElementById(
-            "loadingClienteConsumo"
-        );
-
+    const input = document.getElementById("buscarClienteConsumo");
+    const resultados =document.getElementById("resultadosClienteConsumo");
+    const loading = document.getElementById("loadingClienteConsumo");
     let temporizador = null;
 
     input.addEventListener("input", () => {
-
         clearTimeout(temporizador);
+        const texto = input.value.trim();
 
-        const texto =
-            input.value.trim();
+        document.getElementById("consumoCliente").value = "";
 
-        document
-            .getElementById("consumoCliente")
-            .value = "";
-
-        document
-            .getElementById(
-                "clienteSeleccionadoConsumo"
-            )
-            .classList.add("hidden");
+        document.getElementById("clienteSeleccionadoConsumo").classList.add("hidden");
 
         if (texto.length < 2) {
-
             resultados.innerHTML = "";
-
             resultados.classList.add("hidden");
-
             loading.classList.add("hidden");
-
             return;
         }
 
@@ -1349,49 +1324,7 @@ function seleccionarClienteConsumo(cliente) {
     seleccionado.classList.remove("hidden");
 }
 
-async function guardarConsumo() {
-
-    const clienteId =
-        document.getElementById("consumoCliente").value;
-
-        if (!clienteId) {
-    alert("Busca y selecciona un cliente");
-    return;
-}
-
-    const pisoId =
-        document.getElementById("consumoPiso").value;
-
-    const productosSeleccionados = [];
-
-document
-    .querySelectorAll(".producto-row")
-    .forEach(producto => {
-
-        const cantidad =
-            Number(
-                producto
-                    .querySelector(".producto-cantidad")
-                    .textContent
-            );
-
-        if (cantidad > 0) {
-
-            productosSeleccionados.push({
-                id: producto.dataset.id,
-                nombre: producto.dataset.nombre,
-                precio: Number(producto.dataset.precio),
-                cantidad
-            });
-        }
-    });
-
-if (productosSeleccionados.length === 0) {
-    alert("Selecciona al menos un producto");
-    return;
-}
-
-    const movimientos =
+const movimientos =
     productosSeleccionados.flatMap(producto =>
 
         Array.from(
@@ -1403,7 +1336,6 @@ if (productosSeleccionados.length === 0) {
                 producto_id: producto.id,
                 piso_id: pisoId,
                 tipo: "CONSUMO",
-                concepto: producto.nombre,
                 monto: producto.precio,
                 fecha: new Date().toISOString()
             })
@@ -1411,32 +1343,10 @@ if (productosSeleccionados.length === 0) {
 
     );
 
-    const { error } =
-        await supabaseClient
-            .from("ccp_movimientos")
-            .insert(movimientos);
-
-    if(error){
-
-        alert(error.message);
-
-        return;
-    }
-
-    const total =
-    movimientos.reduce(
-        (suma, movimiento) =>
-            suma + Number(movimiento.monto),
-        0
-    );
-
-alert(
-    `${movimientos.length} productos registrados · Total $${total.toFixed(2)}`
-);
-
-    cerrarModal();
-    await refrescarDashboard();
-}
+const { error } =
+    await supabaseClient
+        .from("ccp_movimientos")
+        .insert(movimientos);
 
 async function nuevoPago() {
 
