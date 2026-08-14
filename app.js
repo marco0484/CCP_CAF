@@ -397,7 +397,6 @@ async function guardarCobroRapido() {
             tipo: "ENTRADA",
             concepto: "Cobro rápido · Entrada de efectivo · Usuario: mostrador",
             monto: Math.abs(monto),
-            fecha: new Date().toISOString()
         });
 
 if (error) {
@@ -688,7 +687,7 @@ const cliente = {
             .from("ccp_movimientos")
             .select("*")
             .eq("cliente_id",clienteId)
-            .order("fecha",{ascending:false});
+            .order("created_at",{ascending:false});
 
     if(errorMovimientos){
         alert(errorMovimientos.message);
@@ -732,7 +731,7 @@ const cliente = {
                         $${Number(m.monto).toFixed(2)}
                     </div>
                     <div style="font-size:.8rem;color:#888;">
-                        ${new Date(m.fecha).toLocaleString()}
+                        ${new Date(m.created_at).toLocaleString()}
                     </div>
                 </div>
             `).join("")}
@@ -1378,7 +1377,6 @@ async function guardarConsumo() {
                     piso_id: pisoId,
                     tipo: "CONSUMO",
                     monto: producto.precio,
-                    fecha: new Date().toISOString()
                 })
             )
         );
@@ -2041,7 +2039,6 @@ const monto = Number(document.getElementById("pagoMonto").value);
                 ? "Pago en efectivo"
                 : "Pago con tarjeta",
             monto: Math.abs(monto),
-            fecha: new Date().toISOString()
         });
 
     if (error) {
@@ -2088,7 +2085,7 @@ async function generarCorte() {
 
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
-        .select("tipo,monto,id_tipo_pago,fecha,cancelado")
+        .select("tipo,monto,id_tipo_pago,created_at,cancelado")
        .in("tipo", ["PAGO", "ENTRADA"])
         .eq("cancelado", false);
 
@@ -2098,7 +2095,7 @@ async function generarCorte() {
     }
 
     const pagosHoy = (data || []).filter(m => {
-        const fecha = new Date(m.fecha);
+        const fecha = new Date(m.created_at);
         fecha.setHours(0,0,0,0);
         return fecha.getTime() === hoy.getTime();
     });
@@ -2178,10 +2175,8 @@ async function verHistorial(clienteId) {
             .from("ccp_movimientos")
             .select("*")
             .eq("cliente_id", clienteId)
-            .order("fecha", {
-                ascending: false
-            });
-
+            .order("created_at"
+                , {ascending: false});
     if(error){
 
         alert(error.message);
@@ -2280,7 +2275,7 @@ ${
 }
 
 <div style="font-size:.8rem;color:#888;">
-    ${new Date(m.fecha)
+    ${new Date(m.created_at)
         .toLocaleString()}
 </div>
 
