@@ -2074,82 +2074,258 @@ await refrescarDashboard();
 async function generarCorte() {
 
     const hoy = new Date();
-    hoy.setHours(0,0,0,0);
+    hoy.setHours(0, 0, 0, 0);
 
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
-        .select("tipo,monto,id_tipo_pago,created_at,cancelado")
-       .in("tipo", ["PAGO", "ENTRADA"])
+        .select(`
+            tipo,
+            monto,
+            id_tipo_pago,
+            created_at,
+            cancelado,
+            piso_id
+        `)
+        .in("tipo", ["PAGO", "ENTRADA"])
         .eq("cancelado", false);
 
-    if(error){
+    if (error) {
         alert(error.message);
         return;
     }
 
-    const pagosHoy = (data || []).filter(m => {
-        const fecha = new Date(m.created_at);
-        fecha.setHours(0,0,0,0);
+    // =========================
+    // MOVIMIENTOS DE HOY
+    // =========================
+
+    const movimientosHoy = (data || []).filter(movimiento => {
+
+        const fecha = new Date(movimiento.created_at);
+
+        fecha.setHours(0, 0, 0, 0);
+
         return fecha.getTime() === hoy.getTime();
+
     });
 
-let pagosEfectivo = 0;
-let pagosTarjeta = 0;
-let cobroRapido = 0;
 
-pagosHoy.forEach(movimiento => {
+    // =========================
+    // CAJAS POR PISO
+    // =========================
 
-    if (movimiento.tipo === "ENTRADA") {
+    const cortes = {
 
-        cobroRapido += Number(movimiento.monto);
+        23: {
+            efectivo: 0,
+            tarjeta: 0,
+            cobroRapido: 0,
+            movimientos: 0
+        },
 
-        return;
-    }
+        26: {
+            efectivo: 0,
+            tarjeta: 0,
+            cobroRapido: 0,
+            movimientos: 0
+        }
 
-    if (
-        movimiento.tipo === "PAGO" &&
-        Number(movimiento.id_tipo_pago) === 1
-    ) {
+    };
 
-        pagosEfectivo += Number(movimiento.monto);
-    }
 
-    if (
-        movimiento.tipo === "PAGO" &&
-        Number(movimiento.id_tipo_pago) === 2
-    ) {
+    // =========================
+    // SEPARAR MOVIMIENTOS
+    // =========================
 
-        pagosTarjeta += Number(movimiento.monto);
-    }
+    movimientosHoy.forEach(movimiento => {
 
-});
+        const piso =
+            Number(movimiento.piso_id);
 
-const total = pagosEfectivo + pagosTarjeta + cobroRapido;
+        // Ignorar movimientos sin piso válido
+        if (!cortes[piso]) {
+            return;
+        }
 
-    document.getElementById("modalTitle").innerHTML =
+        cortes[piso].movimientos++;
+
+        // Cobro rápido
+        if (movimiento.tipo === "ENTRADA") {
+
+            cortes[piso].cobroRapido +=
+                Number(movimiento.monto) || 0;
+
+            return;
+        }
+
+        // Pago efectivo
+        if (
+            movimiento.tipo === "PAGO" &&
+            Number(movimiento.id_tipo_pago) === 1
+        ) {
+
+            cortes[piso].efectivo +=
+                Number(movimiento.monto) || 0;
+
+        }
+
+        // Pago tarjeta
+        if (
+            movimiento.tipo === "PAGO" &&
+            Number(movimiento.id_tipo_pago) === 2
+        ) {
+
+            cortes[piso].tarjeta +=
+                Number(movimiento.monto) || 0;
+
+        }
+
+    });
+
+
+    // =========================
+    // TOTALES
+    // =========================
+
+    const total23 =
+        cortes[23].efectivo +
+        cortes[23].tarjeta +
+        cortes[23].cobroRapido;
+
+    const total26 =
+        cortes[26].efectivo +
+        cortes[26].tarjeta +
+        cortes[26].cobroRapido;
+
+
+    // =========================
+    // MODAL
+    // =========================
+
+    document
+        .getElementById("modalTitle")
+        .innerHTML =
         "Corte del Día";
 
-    document.getElementById("modalBody").innerHTML = `
+
+    document
+        .getElementById("modalBody")
+        .innerHTML = `
+
         <div class="modal-body">
 
-            <h3>📅 ${new Date().toLocaleDateString()}</h3>
+            <h3>
+                📅 ${new Date().toLocaleDateString()}
+            </h3>
 
-            <hr>
 
-            <h2>💵 Pagos en efectivo</h2>
-            <h1>$${pagosEfectivo.toFixed(2)}</h1>
+            <!-- =====================
+                 PISO 23
+            ====================== -->
 
-            <h2>💳 Pagos con tarjeta</h2>
-            <h1>$${pagosTarjeta.toFixed(2)}</h1>
+            <div style="
+                margin-top:20px;
+                padding:18px;
+                border:1px solid #e5e7eb;
+                border-radius:14px;
+            ">
 
-            <h2>⚡ Cobro rápido</h2>
-            <h1>$${cobroRapido.toFixed(2)}</h1>
+                <h2>🏢 Piso 23</h2>
 
-            <hr>
+                <hr>
 
-          <h2>💰 Total ingresado</h2>
-          <h1>$${total.toFixed(2)}</h1>
-          <h3>🧾 Movimientos registrados: ${pagosHoy.length}</h3>
+                <h3>💵 Pagos en efectivo</h3>
+
+                <h1>
+                    $${cortes[23].efectivo.toFixed(2)}
+                </h1>
+
+
+                <h3>💳 Pagos con tarjeta</h3>
+
+                <h1>
+                    $${cortes[23].tarjeta.toFixed(2)}
+                </h1>
+
+
+                <h3>⚡ Cobro rápido</h3>
+
+                <h1>
+                    $${cortes[23].cobroRapido.toFixed(2)}
+                </h1>
+
+
+                <hr>
+
+
+                <h2>💰 Total ingresado Piso 23</h2>
+
+                <h1>
+                    $${total23.toFixed(2)}
+                </h1>
+
+
+                <h3>
+                    🧾 Movimientos registrados:
+                    ${cortes[23].movimientos}
+                </h3>
+
+            </div>
+
+
+
+            <!-- =====================
+                 PISO 26
+            ====================== -->
+
+            <div style="
+                margin-top:20px;
+                padding:18px;
+                border:1px solid #e5e7eb;
+                border-radius:14px;
+            ">
+
+                <h2>🏢 Piso 26</h2>
+
+                <hr>
+
+                <h3>💵 Pagos en efectivo</h3>
+
+                <h1>
+                    $${cortes[26].efectivo.toFixed(2)}
+                </h1>
+
+
+                <h3>💳 Pagos con tarjeta</h3>
+
+                <h1>
+                    $${cortes[26].tarjeta.toFixed(2)}
+                </h1>
+
+
+                <h3>⚡ Cobro rápido</h3>
+
+                <h1>
+                    $${cortes[26].cobroRapido.toFixed(2)}
+                </h1>
+
+
+                <hr>
+
+
+                <h2>💰 Total ingresado Piso 26</h2>
+
+                <h1>
+                    $${total26.toFixed(2)}
+                </h1>
+
+
+                <h3>
+                    🧾 Movimientos registrados:
+                    ${cortes[26].movimientos}
+                </h3>
+
+            </div>
+
         </div>
     `;
 
@@ -2300,9 +2476,7 @@ ${
 </div>
 
                 </div>
-
             `).join("")}
-
         </div>
 
     `;
@@ -2422,13 +2596,11 @@ async function editarCliente(id){
                 value="${cliente.departamento || ""}"
                 placeholder="Departamento"
             >
-
             <input
                 id="editKey"
                 type="password"
                 placeholder="Nueva contraseña (opcional)"
             >
-
             <label style="display:flex;align-items:center;gap:10px;">
 
                 <input
@@ -2447,9 +2619,7 @@ async function editarCliente(id){
             >
                 Guardar cambios
             </button>
-
         </div>
-
     `;
 
     abrirModal();
@@ -2459,79 +2629,230 @@ async function cargarDineroCaja() {
 
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
-        .select("monto")
+        .select("monto,piso_id")
         .eq("tipo", "PAGO")
-        .eq("cancelado", false);
+        .eq("cancelado", false)
+        .eq("entregado", false);
 
     if (error) {
         console.error("Error consultando caja:", error);
         return;
     }
 
-    const total = (data || []).reduce(
-        (suma, pago) => suma + Number(pago.monto),
-        0
-    );
+    const totales = {
+        23: 0,
+        26: 0
+    };
 
-    const elemento = document.getElementById("dineroCaja");
+    (data || []).forEach(pago => {
+
+        const piso = Number(pago.piso_id);
+
+        if (Object.prototype.hasOwnProperty.call(totales, piso)) {
+            totales[piso] += Number(pago.monto) || 0;
+        }
+
+    });
+
+    const elemento =
+        document.getElementById("dineroCaja");
 
     if (elemento) {
-        elemento.textContent = `$${total.toFixed(2)}`;
+
+        elemento.innerHTML = `
+            <span style="
+                display:block;
+                font-size:.78rem;
+                font-weight:600;
+                opacity:.75;
+            ">
+                Piso 23
+            </span>
+
+            <span style="display:block;">
+                $${totales[23].toFixed(2)}
+            </span>
+
+            <span style="
+                display:block;
+                font-size:.78rem;
+                font-weight:600;
+                opacity:.75;
+                margin-top:6px;
+            ">
+                Piso 26
+            </span>
+
+            <span style="display:block;">
+                $${totales[26].toFixed(2)}
+            </span>
+        `;
     }
 
-    return total;
+    return totales;
 }
 
 async function verDineroCaja() {
 
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
-        .select("monto,id_tipo_pago")
+        .select("monto,id_tipo_pago,piso_id")
         .eq("tipo", "PAGO")
-        .eq("cancelado", false);
+        .eq("cancelado", false)
+        .eq("entregado", false);
 
     if (error) {
         alert(error.message);
         return;
     }
 
-    let efectivo = 0;
-    let tarjeta = 0;
+    const cajas = {
+
+        23: {
+            efectivo: 0,
+            tarjeta: 0,
+            movimientos: 0
+        },
+
+        26: {
+            efectivo: 0,
+            tarjeta: 0,
+            movimientos: 0
+        }
+
+    };
 
     (data || []).forEach(pago => {
 
+        const piso = Number(pago.piso_id);
+
+        if (!cajas[piso]) {
+            return;
+        }
+
+        cajas[piso].movimientos++;
+
         if (Number(pago.id_tipo_pago) === 1) {
-            efectivo += Number(pago.monto);
+            cajas[piso].efectivo +=
+                Number(pago.monto) || 0;
         }
 
         if (Number(pago.id_tipo_pago) === 2) {
-            tarjeta += Number(pago.monto);
+            cajas[piso].tarjeta +=
+                Number(pago.monto) || 0;
         }
 
     });
 
-    const total = efectivo + tarjeta;
+    const total23 =
+        cajas[23].efectivo +
+        cajas[23].tarjeta;
+
+    const total26 =
+        cajas[26].efectivo +
+        cajas[26].tarjeta;
 
     document.getElementById("modalTitle").innerHTML =
-        "Dinero en caja";
+        "Dinero en caja por piso";
 
     document.getElementById("modalBody").innerHTML = `
         <div class="modal-body">
 
-            <h3>💵 Efectivo</h3>
-            <h1>$${efectivo.toFixed(2)}</h1>
+            <div style="
+                padding:18px;
+                border:1px solid #e5e7eb;
+                border-radius:14px;
+                margin-bottom:16px;
+            ">
 
-            <h3>💳 Tarjeta</h3>
-            <h1>$${tarjeta.toFixed(2)}</h1>
+                <h2>🏢 Piso 23</h2>
 
-            <hr>
+                <div>
+                    💵 Efectivo:
+                    <strong>
+                        $${cajas[23].efectivo.toFixed(2)}
+                    </strong>
+                </div>
 
-            <h2>Total pendiente de entregar</h2>
-            <h1>$${total.toFixed(2)}</h1>
+                <div>
+                    💳 Tarjeta:
+                    <strong>
+                        $${cajas[23].tarjeta.toFixed(2)}
+                    </strong>
+                </div>
 
-            <small>
-                ${data.length} pagos pendientes de entregar
-            </small>
+                <hr>
+
+                <h3>
+                    Total en caja:
+                    $${total23.toFixed(2)}
+                </h3>
+
+                <small>
+                    ${cajas[23].movimientos}
+                    pagos pendientes
+                </small>
+
+                <button
+                    class="save-btn"
+                    style="margin-top:14px;"
+                    onclick="entregarCuenta(23)"
+                    ${cajas[23].movimientos === 0
+                        ? "disabled"
+                        : ""}
+                >
+                    Entregar cuenta Piso 23
+                </button>
+
+            </div>
+
+
+            <div style="
+                padding:18px;
+                border:1px solid #e5e7eb;
+                border-radius:14px;
+            ">
+
+                <h2>🏢 Piso 26</h2>
+
+                <div>
+                    💵 Efectivo:
+                    <strong>
+                        $${cajas[26].efectivo.toFixed(2)}
+                    </strong>
+                </div>
+
+                <div>
+                    💳 Tarjeta:
+                    <strong>
+                        $${cajas[26].tarjeta.toFixed(2)}
+                    </strong>
+                </div>
+
+                <hr>
+
+                <h3>
+                    Total en caja:
+                    $${total26.toFixed(2)}
+                </h3>
+
+                <small>
+                    ${cajas[26].movimientos}
+                    pagos pendientes
+                </small>
+
+                <button
+                    class="save-btn"
+                    style="margin-top:14px;"
+                    onclick="entregarCuenta(26)"
+                    ${cajas[26].movimientos === 0
+                        ? "disabled"
+                        : ""}
+                >
+                    Entregar cuenta Piso 26
+                </button>
+
+            </div>
 
         </div>
     `;
@@ -2539,13 +2860,27 @@ async function verDineroCaja() {
     abrirModal();
 }
 
-async function entregarCuenta() {
+async function entregarCuenta(pisoId = null) {
+
+    if (!pisoId) {
+        await verDineroCaja();
+        return;
+    }
+
+    pisoId = Number(pisoId);
+
+    if (![23, 26].includes(pisoId)) {
+        alert("Piso no válido");
+        return;
+    }
 
     const { data, error } = await supabaseClient
         .from("ccp_movimientos")
         .select("id,monto")
-        .eq("tipo", "PAGO")
-        .eq("cancelado", false);
+        .in("tipo", ["PAGO", "ENTRADA"])
+        .eq("piso_id", pisoId)
+        .eq("cancelado", false)
+        .eq("entregado", false);
 
     if (error) {
         alert(error.message);
@@ -2553,40 +2888,56 @@ async function entregarCuenta() {
     }
 
     if (!data || data.length === 0) {
-        alert("No hay dinero pendiente por entregar");
+
+        alert(
+            `No hay dinero pendiente por entregar del Piso ${pisoId}`
+        );
+
         return;
     }
 
     const total = data.reduce(
-        (suma, pago) => suma + Number(pago.monto),
+        (suma, movimiento) =>
+            suma + Number(movimiento.monto || 0),
         0
     );
 
     const confirmar = confirm(
-        `¿Entregar cuenta por $${total.toFixed(2)}?\n\n` +
-        `${data.length} pagos serán marcados como entregados.`
+        `¿Entregar cuenta del Piso ${pisoId} por $${total.toFixed(2)}?\n\n` +
+        `${data.length} movimientos serán marcados como entregados.`
     );
 
     if (!confirmar) {
         return;
     }
 
-    const { error: errorEntrega } = await supabaseClient
-        .from("ccp_movimientos")
-        .update({
-            cancelado: true
-        })
-        .eq("tipo", "PAGO")
-        .eq("cancelado", false);
+    const ids =
+        data.map(movimiento => movimiento.id);
+
+    const { error: errorEntrega } =
+        await supabaseClient
+            .from("ccp_movimientos")
+            .update({
+                entregado: true,
+                fecha_entrega: new Date().toISOString()
+            })
+            .in("id", ids)
+            .eq("piso_id", pisoId)
+            .eq("cancelado", false)
+            .eq("entregado", false);
 
     if (errorEntrega) {
+
         alert(errorEntrega.message);
         return;
     }
 
     alert(
-        `Cuenta entregada correctamente.\n\nTotal: $${total.toFixed(2)}`
+        `Cuenta del Piso ${pisoId} entregada correctamente.\n\n` +
+        `Total: $${total.toFixed(2)}`
     );
+
+    cerrarModal();
 
     await refrescarDashboard();
 }
